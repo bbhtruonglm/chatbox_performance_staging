@@ -836,6 +836,7 @@ class Main {
                 /** is_group: conversationStore.select_conversation?.is_group, */
               },
               (e, r) => {
+                /** cập nhật lại list ảnh  */
                 IMAGE_LIST.forEach(file => {
                   file.is_loading = false
                   file.is_done = true
