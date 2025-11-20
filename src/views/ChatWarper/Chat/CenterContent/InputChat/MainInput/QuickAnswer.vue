@@ -49,11 +49,13 @@
                   page_id === conversationStore.select_conversation?.fb_page_id
                 "
                 class="size-4 text-black m-0.5"
-                
               />
               <PageAvatar
                 v-else
-                :page_info="orgStore.list_os?.find((item) => item.page_id === page_id)?.page_info"
+                :page_info="
+                  orgStore.list_os?.find(item => item.page_id === page_id)
+                    ?.page_info
+                "
                 class="size-5"
               />
             </button>
@@ -120,7 +122,7 @@ import { ExternalSite } from '@/utils/helper/ExternalSite'
 import { composableService as inputComposableService } from '@/views/ChatWarper/Chat/CenterContent/InputChat/MainInput/service'
 import { IS_VISIBLE_SEND_BTN_FUNCT } from '@/views/ChatWarper/Chat/CenterContent/InputChat/symbol'
 import { format } from 'date-fns'
-import { last, size, sortBy } from 'lodash'
+import { debounce, last, size, sortBy } from 'lodash'
 import { container } from 'tsyringe'
 import { computed, inject, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -148,6 +150,8 @@ const { t: $t } = useI18n()
 const orgStore = useOrgStore()
 const $external_site = container.resolve(ExternalSite)
 const $input_service = container.resolve(InputService)
+/** Thời gian delay khi đóng modal Trả lời nhanh */
+const NO_RESULT_CLOSE_DELAY = 500 // ms
 
 /**cache câu trả lời, hạnc chế gọi API liên tục mỗi lần click */
 const CACHE_LIST_ANSWER = new Map<string, QuickAnswerInfo[]>()
@@ -249,74 +253,215 @@ async function changeModalPosition() {
 /** Lấy dữ liệu trả lời nhanh */
 async function getQuickAnswer() {
   try {
-    // lấy page_id từ local
+    /** lấy page_id từ local */
     const PAGE_ID_MAP = getItem('quick_answer_page_id') || {}
 
     page_id.value =
       PAGE_ID_MAP?.[conversationStore.select_conversation?.fb_page_id || ''] ||
       conversationStore.select_conversation?.fb_page_id
 
-    // nếu không có id trang thì thôi
+    /** nếu không có id trang thì thôi */
     if (!page_id.value) return
 
-    // nếu đã cache dữ liệu rồi thì thôi không gọi api nữa
+    /** nếu đã cache dữ liệu rồi thì thôi không gọi api nữa */
     if (CACHE_LIST_ANSWER.has(page_id.value)) {
-      // lấy dữ liệu trong cache
+      /** lấy dữ liệu trong cache */
       list_answer.value = CACHE_LIST_ANSWER.get(page_id.value) || []
 
       return
     }
 
-    // bật loading
+    /** bật loading */
     is_loading.value = true
 
-    // gọi api lấy dữ liệu câu trả lời
+    /** gọi api lấy dữ liệu câu trả lời */
     const ANSWERS = await new QuickAnswer(page_id.value).readAnswer(
       0,
       MAX_ANSWER
     )
 
-    // sắp xếp
+    /** sắp xếp */
     list_answer.value = sortBy(ANSWERS, 'index')
 
-    // thêm tính năng AI lên đầu trả lời nhanh
+    /** thêm tính năng AI lên đầu trả lời nhanh */
     list_answer.value?.unshift(...AI_FEATURE)
 
-    // cache lại dữ liệu
+    /** cache lại dữ liệu */
     CACHE_LIST_ANSWER.set(page_id.value, list_answer.value)
 
-    // chọn câu đầu đầu tiên
+    /** chọn câu đầu đầu tiên */
     setDefaultQuickAnswer()
 
-    // tắt loading
+    /** tắt loading */
     is_loading.value = false
   } catch (e) {
-    // tắt loading
+    /** tắt loading */
     is_loading.value = false
   }
 }
 /** Tìm kiếm câu trả lời nhanh khi nhập trong input chat */
-function seachQuickAnswer(search_value?: string) {
-  // nếu không có id trang thì thôi
-  if (!page_id.value) return
+// function seachQuickAnswer(search_value?: string) {
+//   /** nếu không có id trang thì thôi */
+//   if (!page_id.value) return
 
-  // nạp lại dữ liệu mới nhất từ cache
-  list_answer.value = CACHE_LIST_ANSWER.get(page_id.value) || []
+//   /** nạp lại dữ liệu mới nhất từ cache */
+//   list_answer.value = CACHE_LIST_ANSWER.get(page_id.value) || []
 
-  // nếu không có giá trị tìm kiếm thì tự động chọn câu đầu đầu tiên
-  if (!search_value) return setDefaultQuickAnswer()
+//   /** nếu không có giá trị tìm kiếm thì tự động chọn câu đầu đầu tiên */
+//   if (!search_value) return setDefaultQuickAnswer()
 
-  /**giá trị tìm kiếm đã được xử lý */
-  const SEARCH_VALUE = nonAccentVn(search_value)
+//   /**giá trị tìm kiếm đã được xử lý */
+//   const SEARCH_VALUE = nonAccentVn(search_value)
 
-  // tìm kiếm theo tiêu đề của câu trả lời
-  list_answer.value = list_answer.value.filter(answer =>
-    nonAccentVn(answer?.title || '')?.includes(SEARCH_VALUE)
+//   /** tìm kiếm theo tiêu đề của câu trả lời */
+//   list_answer.value = list_answer.value.filter(answer =>
+//     nonAccentVn(answer?.title || '')?.includes(SEARCH_VALUE)
+//   )
+
+//   /** tự động chọn câu đầu đầu tiên */
+//   setDefaultQuickAnswer()
+// }
+
+// async function seachQuickAnswer(search_value?: string) {
+//   if (!page_id.value) return
+
+//   // load lại dữ liệu từ cache
+//   list_answer.value = CACHE_LIST_ANSWER.get(page_id.value) || []
+
+//   // không có search => reset UI
+//   if (!search_value) return setDefaultQuickAnswer()
+
+//   const SEARCH_VALUE = nonAccentVn(search_value)
+
+//   // tìm trong local
+//   let result = list_answer.value.filter(answer =>
+//     nonAccentVn(answer?.title || '').includes(SEARCH_VALUE)
+//   )
+
+//   // nếu TÌM RA thì dùng local
+//   if (result.length) {
+//     list_answer.value = result
+//     return setDefaultQuickAnswer()
+//   }
+
+//   // ----- Không tìm thấy → gọi API search -----
+//   try {
+//     is_loading.value = true
+
+//     const RES = await new QuickAnswer(page_id.value).readAnswer(
+//       0,
+//       MAX_ANSWER,
+//       search_value // <-- search ở server
+//     )
+
+//     // nếu server trả về rỗng => vẫn giữ list rỗng
+//     if (!RES?.length) {
+//       list_answer.value = []
+//       return
+//     }
+
+//     // sort
+//     const NEW_LIST = sortBy(RES, 'index')
+
+//     // merge vào cache cũ
+//     const CACHE = CACHE_LIST_ANSWER.get(page_id.value) || []
+//     const MERGED = [...CACHE]
+
+//     // tránh duplicate
+//     NEW_LIST.forEach(item => {
+//       if (!MERGED.find(x => x.id === item.id)) MERGED.push(item)
+//     })
+
+//     // update cache
+//     CACHE_LIST_ANSWER.set(page_id.value, MERGED)
+
+//     // update UI
+//     list_answer.value = NEW_LIST
+//     setDefaultQuickAnswer()
+//   } catch (e) {
+//     console.error(e)
+//   } finally {
+//     is_loading.value = false
+//   }
+// }
+
+// debounce 300ms
+/** Xử lý debounce tránh user spam */
+
+/**
+ * Hàm search Quick Answer dựa trên input từ người dùng
+ * - Nếu input chứa space → coi như không search, đóng modal
+ * - Nếu input viết liền → gọi debounce search
+ *
+ * @param inputValue Chuỗi nhập từ người dùng
+ */
+function seachQuickAnswer(inputValue: string) {
+  /** 1️⃣ Nếu input có space → đóng modal Quick Answer */
+  if (inputValue.includes(' ')) {
+    commonStore.is_show_quick_answer = false
+    return
+  }
+
+  /** 2️⃣ Nếu input viết liền → gọi debounce search */
+  DEBOUNCE_SEARCH(inputValue)
+}
+
+/**
+ * Debounce để tránh gọi API quá nhiều lần khi gõ
+ * - Delay mặc định: 300ms
+ */
+const DEBOUNCE_SEARCH = debounce(async (searchValue: string) => {
+  /** Nếu không có page_id hoặc searchValue rỗng → bỏ qua */
+  if (!page_id.value || !searchValue) return
+
+  /** 2a️⃣ Tìm kiếm local cache trước */
+  let cached_list = CACHE_LIST_ANSWER.get(page_id.value) || []
+
+  /** Filter các item trong cache chứa keyword (bỏ dấu + lowercase) */
+  let filtered = cached_list.filter(answer =>
+    nonAccentVn(answer.title || '').includes(nonAccentVn(searchValue))
   )
 
-  // tự động chọn câu đầu đầu tiên
-  setDefaultQuickAnswer()
-}
+  if (filtered.length) {
+    /** Nếu tìm thấy trong cache → hiển thị modal Quick Answer */
+    list_answer.value = filtered
+    commonStore.is_show_quick_answer = true
+
+    /** Chọn mặc định Quick Answer nếu có */
+    setDefaultQuickAnswer()
+  } else {
+    /** 2b️⃣ Nếu cache không có → gọi API search */
+    try {
+      const API_RESULT = await new QuickAnswer(page_id.value).readAnswer(
+        0, // offset
+        MAX_ANSWER, // số lượng trả về tối đa
+        searchValue // keyword search
+      )
+      /** API result có data thì xử lý */
+      if (API_RESULT?.length) {
+        /** Nếu API trả về kết quả → hiển thị modal + cập nhật cache */
+        list_answer.value = API_RESULT
+        /** Bật cờ hiện modal quick answer */
+        commonStore.is_show_quick_answer = true
+        /** set giá trị mặc định */
+        setDefaultQuickAnswer()
+        /** Lưu giá trị cache */
+        CACHE_LIST_ANSWER.set(page_id.value, API_RESULT)
+      } else {
+        /** 2c️⃣ Nếu API cũng không có dữ liệu → đóng modal sau 0.5s */
+        setTimeout(() => {
+          commonStore.is_show_quick_answer = false
+        }, NO_RESULT_CLOSE_DELAY)
+      }
+    } catch (e) {
+      /** Nếu API lỗi → đóng modal sau 0.5s */
+      setTimeout(() => {
+        commonStore.is_show_quick_answer = false
+      }, NO_RESULT_CLOSE_DELAY)
+    }
+  }
+}, 300) // delay debounce 300ms
+
 /**focus vào input chat */
 function focusChat() {
   document.getElementById('chat-text-input-message')?.focus()
@@ -375,41 +520,41 @@ function handleAi(action?: string) {
 }
 /**dịch nội dung */
 async function transalate() {
-  // nếu đang loading thì thôi
+  /** nếu đang loading thì thôi */
   if (messageStore.is_input_run_ai || !page_id.value) return
 
-  // đánh dấu đang chạy AI
+  /** đánh dấu đang chạy AI */
   messageStore.is_input_run_ai = true
 
   try {
-    // tắt modal
+    /** tắt modal */
     commonStore.is_show_quick_answer = false
 
-    // focus vào lại input chat
+    /** focus vào lại input chat */
     focusChat()
 
     /**input chat */
     const INPUT_CHAT = document.getElementById('chat-text-input-message')
 
-    // nếu không có input chat thì thôi
+    /** nếu không có input chat thì thôi */
     if (!INPUT_CHAT) throw 'DONE'
 
     /**nội dung chat */
     let text = INPUT_CHAT?.innerText
 
-    // nếu chỉ có '/' thì xóa luôn để tránh lỗi
+    /** nếu chỉ có '/' thì xóa luôn để tránh lỗi */
     if (text?.trim() === '/') text = ''
 
-    // xóa dấu /dich ở cuối câu, loại bỏ khoảng trắng
+    /** xóa dấu /dich ở cuối câu, loại bỏ khoảng trắng */
     text = text?.trim()?.replace(/\/(?:d(?:ich|ic|i)?|\/)?$/, '')
 
-    // cập nhật lại input trước 1 lần
+    /** cập nhật lại input trước 1 lần */
     $input_service.setInputText(text)
 
-    // check lại nếu không có nội dung thì thôi
+    /** check lại nếu không có nội dung thì thôi */
     if (!text) throw 'DONE'
 
-    // gọi api dịch
+    /** gọi api dịch */
     const RES = await text_translate({
       from: 'vn',
       to: 'en',
@@ -418,14 +563,14 @@ async function transalate() {
       client_id: client_id.value,
     })
 
-    // nếu không có dữ liệu thì thôi
+    /** nếu không có dữ liệu thì thôi */
     if (!RES?.text)
       throw $t('v1.view.main.dashboard.chat.quick_answer.translate_error')
 
-    // thay đổi nội dung chat thành dịch, nếu chưa bị huỷ
+    /** thay đổi nội dung chat thành dịch, nếu chưa bị huỷ */
     if (messageStore.is_input_run_ai) $input_service.setInputText(RES.text)
   } catch (e) {
-    // hiển thị thông báo lỗi
+    /** hiển thị thông báo lỗi */
     if (e !== 'DONE') toastError(e)
   }
 
@@ -676,79 +821,79 @@ function scrollIntoView(id: string) {
 function handleChatValue($event: KeyboardEvent) {
   /**phím người dùng nhấn */
   const KEY = $event.key
+
   /**nội dung chat */
   const INPUT_VALUE = ($event.target as HTMLDivElement)?.innerText
-
-  // nếu modal đã mở
+  console.log(commonStore.is_show_quick_answer, 'nnnnnnnnnnnnn')
+  /** nếu modal đã mở */
   if (commonStore.is_show_quick_answer) onModalShowed(KEY, INPUT_VALUE)
-  // nếu modal chưa mở
-  else onModalHid(INPUT_VALUE)
+  /** nếu modal chưa mở */ else onModalHid(INPUT_VALUE)
 }
 /**xử lý sự kiện khi modal đã hiển thị */
 function onModalShowed(key: string, value: string) {
   /**số lượng câu trả lời */
   const SIZE_LIST_ANSWER = list_answer.value?.length
 
-  // * bấm Esc thì tắt modal
+  /** * bấm Esc thì tắt modal */
   if (key === 'Escape') return toggleModal()
 
-  // * bấm mũi tên xuống
+  /** * bấm mũi tên xuống */
   if (key === 'ArrowDown') {
-    // nếu đã hết câu trả lời thì đặt index về -1 để quay lại ban đầu
+    /** nếu đã hết câu trả lời thì đặt index về -1 để quay lại ban đầu */
     if (selected_answer_index.value >= SIZE_LIST_ANSWER - 1)
       selected_answer_index.value = -1
 
-    // chọn id câu trả lời tiếp theo, tăng index lên 1
+    /** chọn id câu trả lời tiếp theo, tăng index lên 1 */
     selected_answer_id.value =
       list_answer.value?.[++selected_answer_index.value]?.id || ''
 
-    // scroll đến vị trí
+    /** scroll đến vị trí */
     return scrollIntoView(selected_answer_id.value)
   }
 
-  // * bấm Mũi tên lên
+  /** * bấm Mũi tên lên */
   if (key === 'ArrowUp') {
-    // nếu là câu trả lời đầu tiên thì chạy xuống cuối
+    /** nếu là câu trả lời đầu tiên thì chạy xuống cuối */
     if (!selected_answer_index.value)
       selected_answer_index.value = SIZE_LIST_ANSWER
 
-    // chọn câu trả lời tiếp theo, giảm index xuống 1
+    /** chọn câu trả lời tiếp theo, giảm index xuống 1 */
     selected_answer_id.value =
       list_answer.value?.[--selected_answer_index.value]?.id || ''
 
-    // scroll đến vị trí
+    /** scroll đến vị trí */
     return scrollIntoView(selected_answer_id.value)
   }
 
-  // bấm Enter thì chọn câu trả lời nhanh đang được select
+  /** bấm Enter thì chọn câu trả lời nhanh đang được select */
   if (key === 'Enter')
     return selectQuickAnswer(list_answer.value[selected_answer_index.value])
 
-  // nếu không có gạch mà đang mở thì tắt modal
+  /** nếu không có gạch mà đang mở thì tắt modal */
   if (!value.includes('/')) return toggleModal()
 
-  // tìm kiếm câu trả lời nhanh nếu đang mở modal
-  if (value?.includes('/')) seachQuickAnswer(last(value.split('/')))
+  /** tìm kiếm câu trả lời nhanh nếu đang mở modal */
+  if (value?.includes('/')) seachQuickAnswer(last(value.split('/')) || '')
 }
 /**xử lý sự kiện khi modal đã tắt / không hiển thị */
 function onModalHid(value: string) {
-  // nếu gõ gạch ở cuối câu mà chưa mở thì mở modal
+  /** nếu gõ gạch ở cuối câu mà chưa mở thì mở modal */
   if (!value.endsWith('/')) return
 
-  // mở modal
+  /** mở modal */
   toggleModal()
 
-  // chọn câu đầu tiên nếu có
+  /** chọn câu đầu tiên nếu có */
   setDefaultQuickAnswer()
 }
 /**chọn câu trả lời nhanh mặc định */
 function setDefaultQuickAnswer() {
-  // nếu không có dữ liệu thì thôi
+  /** nếu không có dữ liệu thì thôi */
   if (!list_answer.value?.length) return
 
-  // tự động lấy id của câu đầu tiên
+  /** tự động lấy id của câu đầu tiên */
   selected_answer_id.value = list_answer.value?.[0]?.id || ''
-  // tự động đặt vị trí thành đầu tiên
+  /** tự động đặt vị trí thành đầu tiên */
   selected_answer_index.value = 0
 }
 

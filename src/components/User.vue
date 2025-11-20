@@ -198,7 +198,7 @@ async function countNotiAllOrg() {
     /** Gán giá trị. = data khi call api */
     total_count += await count_all_noti(ORG_IDS)
   } catch (e) {
-    // tạm thời không xử lý
+    /** tạm thời không xử lý */
   } finally {
     return total_count
   }
@@ -207,13 +207,13 @@ async function countNotiAllOrg() {
 /**đếm số noti của tổ chức đang chọn */
 async function countNotiCurrentOrg() {
   try {
-    // nếu chưa chọn tổ chức thì không làm gì
+    /** nếu chưa chọn tổ chức thì không làm gì */
     if (!orgStore.selected_org_id) return
 
-    // đếm số thông báo
+    /** đếm số thông báo */
     return await count_noti(orgStore.selected_org_id)
   } catch (e) {
-    // tạm thời không xử lý
+    /** tạm thời không xử lý */
   }
 }
 /** Mở menu */
@@ -225,36 +225,36 @@ function openMenu($event: MouseEvent) {
 }
 /**mở menu */
 function redirectMenu(path: string) {
-  // tắt menu dropdown
+  /** tắt menu dropdown */
   user_menu_ref.value?.toggleDropdown()
 
-  // chuyển đến trang
+  /** chuyển đến trang */
   $router.push(`/dashboard/${path}`)
 }
 /**mở modal thông tin người dùng */
 function openUserInfoModal() {
-  // tắt menu dropdown
+  /** tắt menu dropdown */
   user_menu_ref.value?.toggleDropdown()
 
-  // mở modal thông tin người dùng
+  /** mở modal thông tin người dùng */
   modal_user_info_ref.value?.toggleModal()
 }
 
 /** mở modal phím tắt */
 function openKeyboardShortcutModal() {
-  // tắt menu dropdown
+  /** tắt menu dropdown */
   user_menu_ref.value?.toggleDropdown()
 
-  // mở modal phím tắt
+  /** mở modal phím tắt */
   modal_keyboard_shortcut.value?.toggleModal?.()
 }
 
 /**mở modal của noti */
 function openNoti() {
-  // tắt dropdown
+  /** tắt dropdown */
   user_menu_ref.value?.toggleDropdown()
 
-  // mở modal
+  /** mở modal */
   modal_alert_ref.value?.toggleModal()
 }
 </script>

@@ -432,10 +432,10 @@ export async function getSelectedPageInfo(
     if (!r)
       return proceed($t('v1.view.main.dashboard.chat.error.get_page_info'))
 
-    // lưu dữ liệu trang đã chọn
+    /** lưu dữ liệu trang đã chọn */
     pageStore.selected_page_list_info = r
 
-    // lưu dữ liệu nhân viên của các trang đã chọn
+    /** lưu dữ liệu nhân viên của các trang đã chọn */
     pageStore.selected_pages_staffs = User.getUsersInfo(r)
 
     proceed()
