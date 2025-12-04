@@ -102,6 +102,7 @@ const source: Language = {
   'Kết nối với Tiktok': 'Kết nối với Tiktok',
   'Kết nối với Tiktok để chat nhiều Trang tự động với AI, tối ưu chi phí Marketing với CAPI, tự động tích hợp các ứng dụng của Doanh nghiệp.':
     'Kết nối với Tiktok để chat nhiều Trang tự động với AI, tối ưu chi phí Marketing với CAPI, tự động tích hợp các ứng dụng của Doanh nghiệp.',
+  'add _ member': 'Thêm {count} thành viên',
   v1: {
     common: {
       zalo: 'Zalo',
@@ -190,6 +191,8 @@ const source: Language = {
         'Bạn có chắc chắn muốn thay đổi mã truy cập không. Điều này sẽ làm các api đang hoạt động bị dừng lại?',
       create_new_token: 'Tạo mã bí mật mới',
       tiktok: 'Tiktok',
+      add_member_success: 'Thêm thành viên thành công',
+      remove_member_success: 'Xóa thành viên thành công',
     },
     view: {
       network: {

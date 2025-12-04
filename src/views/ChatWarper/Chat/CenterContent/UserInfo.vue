@@ -137,7 +137,10 @@
     @add-member="openAddZaloModal"
   />
   <ChangeStaff ref="change_staff_ref" />
-  <ZaloAddMember ref="modal_zalo_add_member_ref" />
+  <ZaloAddMember
+    ref="modal_zalo_add_member_ref"
+    @success="handleRefreshMember"
+  />
 </template>
 <script setup lang="ts">
 import {
@@ -208,16 +211,22 @@ const is_staff_assigned = computed(() => {
   )
 })
 
+/** ref của modal add member */
 const { modal_zalo_add_member_ref } = storeToRefs(useMessageStore())
 
+/**
+ * Mở modal add member
+ */
 const openAddZaloModal = () => {
-  console.log('modal add member to group')
-  // mở modal Add Zalo
-  // isAddZaloModalOpen.value = true
+  /**
+   * Mở modal add member
+   */
   modal_zalo_add_member_ref?.value?.toggleModal()
 }
 
-/** lắng nghe trạng thái của phím tắt */
+/**
+ * Lắng nghe trạng thái của phím tắt
+ */
 watch(
   () => commonStore.keyboard_shortcut,
   value => {
@@ -323,6 +332,13 @@ function clickAvatar() {
   }
   /** mở modal xem thông tin người dùng */
   client_menu_ref.value?.openClientInfo()
+}
+
+/**
+ * Refresh danh sách thành viên
+ */
+function handleRefreshMember() {
+  member_list_ref.value?.refresh()
 }
 
 const $main = new Main()
