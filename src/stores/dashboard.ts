@@ -9,6 +9,7 @@ import type {
   OrgInfo,
   OwnerShipInfo,
 } from '@/service/interface/app/billing'
+
 import type { AppInfo } from '@/service/interface/app/widget'
 import type { ModalPosition } from '@/service/interface/vue'
 import { SingletonMemberShipHelper } from '@/utils/helper/Billing/MemberShip'
@@ -124,6 +125,9 @@ export const useOrgStore = defineStore('org_store', () => {
   const list_os = ref<OwnerShipInfo[]>()
   /**danh sách thành viên */
   const list_ms = ref<MemberShipInfo[]>()
+
+  /** danh sách group */
+  const list_group = ref<IGroup[]>()
 
   /**dữ liệu các nhóm đang được chọn của tổ chức */
   const selected_org_group = ref<Record<string, string>>(
@@ -271,6 +275,7 @@ export const useOrgStore = defineStore('org_store', () => {
     list_ms,
 
     admin_orgs,
+    list_group,
 
     findOrg,
     isFreePack,
