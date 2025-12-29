@@ -187,7 +187,7 @@ const $props = withDefaults(
   }>(),
   {}
 )
-console.log('$props.message', $props.message)
+
 /**tin nhắn này thuộc về dạng nào */
 const message_type = computed(() => $props.message?.message_type)
 /**kích thước của file đầu tiên */
