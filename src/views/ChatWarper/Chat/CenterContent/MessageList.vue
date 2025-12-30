@@ -266,7 +266,12 @@ const select_conversation = computed(() => {
 const show_list_message = computed(() =>
   // xử lý logic hiển thị tin nhắn
   messageStore.list_message.filter(message => {
-    // 1. Nếu có nội dung text hoặc postback -> hiển thị
+    // 1. Quan trọng: Nếu là tin nhắn quảng cáo (có ad_id) -> luôn hiển thị
+    if (message.ad_id) return true
+    // 2. Nếu là tin nhắn post (có fb_post_id) -> luôn hiển thị
+    if (message.fb_post_id) return true
+
+    // 2. Nếu có nội dung text hoặc postback -> hiển thị
     if (message.message_text || message.postback_title) return true
     /**  Khai báo attachments */
     const ATTACHMENTS = message.message_attachments
