@@ -64,15 +64,18 @@
     <!-- Check Ad Blocker -->
     <script src="/check-ad-blocker.js"></script>
 
-    <!-- TẠM ẨN GOOGLE ANALYTICS ĐỂ TEST BEST PRACTICES -->
-    <!-- <script>
+    <!-- Google tag (gtag.js) -->
+    <script>
+      /** Defer load Google Analytics sau khi page load xong */
       window.addEventListener('load', function () {
+        /** Tạo script tag cho gtag.js */
         var gtagScript = document.createElement('script')
         gtagScript.async = true
         gtagScript.src =
           'https://www.googletagmanager.com/gtag/js?id=G-PL4M71RS48'
         document.head.appendChild(gtagScript)
 
+        /** Khởi tạo dataLayer và gtag function */
         window.dataLayer = window.dataLayer || []
         function gtag() {
           dataLayer.push(arguments)
@@ -81,7 +84,7 @@
         gtag('js', new Date())
         gtag('config', 'G-PL4M71RS48')
       })
-    </script> -->
+    </script>
   </head>
 
   <body>
