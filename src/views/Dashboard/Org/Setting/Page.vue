@@ -111,9 +111,10 @@ const connect_page_ref = ref<InstanceType<typeof ConnectPage>>()
 const search_page = ref('')
 
 // nạp dữ liệu trang khi component được mount
-onMounted(getOs)
+// Đã load ở Setting.vue
+// onMounted(getOs)
 // nạp dữ liệu trang khi tổ chức được chọn
-watch(() => orgStore.selected_org_id, getOs)
+// watch(() => orgStore.selected_org_id, getOs)
 
 /** ẩn hiện trang */
 function showPage(page: IPage) {

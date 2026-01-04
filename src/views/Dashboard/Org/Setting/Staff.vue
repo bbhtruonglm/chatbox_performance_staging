@@ -147,9 +147,10 @@ const connect_page_ref = ref<InstanceType<typeof ConnectPage>>()
 const search_employee = ref('')
 
 // nạp danh sách nhân viên khi component được mount
-onMounted(readMs)
+// Đã load ở Setting.vue
+// onMounted(readMs)
 // nạp danh sách nhân viên khi chọn tổ chức khác
-watch(() => orgStore.selected_org_id, readMs)
+// watch(() => orgStore.selected_org_id, readMs)
 
 /** ẩn hiện nhân sự */
 function showEmployee(ms: MemberShipInfo) {
