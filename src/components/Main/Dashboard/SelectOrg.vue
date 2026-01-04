@@ -11,12 +11,17 @@
             'rotate-180': is_show_option,
           }"
           class="w-3 h-3 text-slate-500"
+          aria-hidden="true"
         />
       </div>
       <button
         v-show="!is_show_option"
         @click="showOption"
+        type="button"
         class="rounded-lg w-full h-full py-2 px-3 pr-8 bg-white flex items-center text-sm gap-2.5"
+        :aria-label="$t('Chọn tổ chức')"
+        :aria-expanded="is_show_option"
+        aria-haspopup="listbox"
       >
         <template v-if="is_allow_all && orgStore.is_selected_all_org">
           {{ $t('v1.view.main.dashboard.select_page.all_org') }}
@@ -62,6 +67,8 @@
         <img
           src="@/assets/icons/search.svg"
           class="absolute left-2 w-5 h-5 top-1/2 -translate-y-2/4"
+          alt=""
+          aria-hidden="true"
         />
       </div>
       <div
