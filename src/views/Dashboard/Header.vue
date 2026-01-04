@@ -22,6 +22,7 @@
         @click="attach_ref?.toggleDropdown"
         v-tooltip.bottom="$t('v1.view.main.dashboard.nav.menu')"
         class="rounded-lg group"
+        aria-label="Menu"
       >
         <Squares2X2Icon class="w-7 h-7 m-auto group-hover:text-red-600" />
       </button>

@@ -189,10 +189,10 @@ computed(() => selectPageStore.current_menu)
 onMounted(async () => {
   /**
    * load lại info của chatbot user
-   * phòng trường hợp user mới được kích hoạt gói
-   * nhưng sẽ bị gọi api 2 lần lúc đầu
+   * ĐÃ ĐƯỢC GỌI TRONG initRequireData (composable.ts)
+   * Comment out để tránh gọi API 2 lần
    */
-  getMeChatbotUser?.()
+  // getMeChatbotUser?.()
 
   // kích hoạt tự động mở kết nối nền tảng nếu cần
   triggerConnectPlatform()
