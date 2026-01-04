@@ -8,29 +8,41 @@
       class="absolute bottom-[30px] right-0 shadow-lg rounded-lg w-max flex flex-col gap-1 p-1 bg-white"
     >
       <button
+        type="button"
         @click="changeLang(key)"
         v-for="(lang, key) of SELECT_LANG"
+        :key="key"
         class="flex py-1.5 px-2 items-center gap-3"
+        :aria-label="`Chọn ngôn ngữ ${lang.title}`"
       >
         <img
           :src="lang.img"
+          :alt="`Cờ ${lang.title}`"
           class="rounded-full w-5 h-5 object-cover"
         />
-        <div class="text-sm font-medium">{{ lang.title }}</div>
+        <span class="text-sm font-medium">{{ lang.title }}</span>
       </button>
     </div>
     <button
+      type="button"
       @click="is_toggle_select_lang = !is_toggle_select_lang"
       class="rounded flex items-center gap-1"
+      :aria-label="`Ngôn ngữ hiện tại: ${SELECT_LANG?.[current_locale]?.title}. Nhấn để thay đổi`"
+      :aria-expanded="is_toggle_select_lang"
+      aria-haspopup="listbox"
     >
       <img
         :src="SELECT_LANG?.[current_locale].img"
+        :alt="`Cờ ${SELECT_LANG?.[current_locale]?.title}`"
         class="rounded-full w-3 h-3 object-cover"
       />
-      <div class="text-xs">
+      <span class="text-xs">
         {{ SELECT_LANG?.[current_locale]?.title }}
-      </div>
-      <ChevronDownIcon class="w-3 h-3" />
+      </span>
+      <ChevronDownIcon
+        class="w-3 h-3"
+        aria-hidden="true"
+      />
     </button>
   </div>
 </template>

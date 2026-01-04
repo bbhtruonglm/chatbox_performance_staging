@@ -1,39 +1,48 @@
 <template>
-  <section
+  <main
     class="size-full bg-gradient-secondary flex items-center justify-center p-4 relative"
+    role="main"
   >
-    <div
+    <section
       class="bg-white w-full max-w-[478px] shadow-xl rounded-xl flex flex-col gap-6 p-6 max-h-full overflow-y-scroll"
+      aria-label="Đăng nhập"
     >
-      <div
-        :style="{
-          backgroundImage: `url(${commonStore.partner?.logo?.full})`,
-        }"
-        class="h-7 w-full bg-contain bg-no-repeat bg-left flex-shrink-0"
+      <img
+        v-if="commonStore.partner?.logo?.full"
+        :src="commonStore.partner?.logo?.full"
+        :alt="commonStore.partner?.name || 'Logo'"
+        class="h-7 w-auto object-contain object-left flex-shrink-0"
       />
       <RouterView />
       <slot />
-      <div class="flex justify-between">
+      <nav
+        class="flex justify-between"
+        aria-label="Footer navigation"
+      >
         <p class="flex items-center gap-3 text-xs">
           <a
             :href="PRIVACY"
             target="_blank"
+            rel="noopener noreferrer"
             class="no-underline text-slate-500"
+            :aria-label="$t('Chính sách bảo mật')"
           >
             {{ $t('Chính sách') }}
           </a>
           <a
             :href="TERM"
             target="_blank"
+            rel="noopener noreferrer"
             class="no-underline text-slate-500"
+            :aria-label="$t('Điều khoản sử dụng')"
           >
             {{ $t('Điều khoản') }}
           </a>
         </p>
         <Language />
-      </div>
-    </div>
-  </section>
+      </nav>
+    </section>
+  </main>
 </template>
 <script setup lang="ts">
 import { useCommonStore } from '@/stores'
