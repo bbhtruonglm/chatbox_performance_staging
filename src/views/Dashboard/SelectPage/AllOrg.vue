@@ -14,6 +14,7 @@
           v-if="org?.org_id && $main.isVisibleOrg(org?.org_id)"
           :key="org?.org_id"
           :org_id="org?.org_id"
+          :org_info="org"
           v-model:active_page_list="active_pages_of_orgs[org?.org_id]"
         />
       </template>

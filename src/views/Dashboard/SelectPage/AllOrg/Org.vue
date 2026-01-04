@@ -17,12 +17,15 @@
       <div class="sticky top-0 pt-3">
         <img
           v-if="
+            org_info?.org_info?.org_avatar ||
             pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_avatar
           "
           :src="
+            org_info?.org_info?.org_avatar ||
             pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_avatar
           "
           :alt="
+            org_info?.org_info?.org_name ||
             pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_name ||
             'Logo tổ chức'
           "
@@ -38,7 +41,10 @@
     </template>
     <template #title>
       <div class="flex-shrink-0">
-        {{ pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_name }}
+        {{
+          org_info?.org_info?.org_name ||
+          pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_name
+        }}
       </div>
       <Group :org_id />
     </template>
@@ -77,11 +83,14 @@ import OrgTitleAction from '@/views/Dashboard/SelectPage/AllOrg/Org/OrgTitleActi
 import BriefCaseIcon from '@/components/Icons/BriefCase.vue'
 
 import type { PageData } from '@/service/interface/app/page'
+import type { OrgInfo } from '@/service/interface/app/billing'
 
 const $props = withDefaults(
   defineProps<{
     /** id tổ chức */
     org_id: string
+    /** thông tin tổ chức */
+    org_info?: OrgInfo
   }>(),
   {}
 )
