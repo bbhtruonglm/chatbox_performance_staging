@@ -19,7 +19,7 @@ export function initRequireData() {
   /** init các dữ liệu cần thiết */
   onMounted(() => {
     getMeChatbotUser()
-    getAllOrg()
+    // getAllOrg() - ĐÃ CHUYỂN SANG GỌI SONG SONG TRONG usePageManager.getALlOrgAndPage()
   })
 
   /**đọc các thông tin của user hiện tại đang đăng nhập */
