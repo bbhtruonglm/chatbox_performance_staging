@@ -11,7 +11,9 @@
       <img
         :src="commonStore.partner?.logo?.full"
         :alt="commonStore.partner?.name || 'Logo'"
-        class="h-8"
+        width="120"
+        height="32"
+        class="h-8 w-auto"
       />
     </button>
     <div class="flex gap-3 md:gap-7 items-center">

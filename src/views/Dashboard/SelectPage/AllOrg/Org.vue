@@ -27,6 +27,8 @@
             'Logo tổ chức'
           "
           class="w-5 h-5 rounded-oval"
+          width="20"
+          height="20"
         />
         <BriefCaseIcon
           v-else

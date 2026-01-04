@@ -5,6 +5,8 @@
         src="@/assets/imgs/empty-page.png"
         class="w-56 h-auto"
         alt="Không có trang nào"
+        width="224"
+        height="224"
       />
       <div class="text-2xl font-semibold">
         {{ $t('v1.view.main.dashboard.select_page.empty_page.title') }}
