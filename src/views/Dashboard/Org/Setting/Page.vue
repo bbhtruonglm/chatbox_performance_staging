@@ -38,6 +38,11 @@
     </template>
     <template #item>
       <div
+        v-if="orgStore.is_loading"
+        class="h-20 w-full animate-pulse bg-slate-100 rounded-md"
+      />
+      <div
+        v-else
         class="grid gap-6 grid-cols-1 md:grid-cols-4 max-h-[50dvh] overflow-auto"
       >
         <template v-for="os of orgStore.list_os">

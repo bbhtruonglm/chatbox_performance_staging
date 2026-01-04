@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-lg py-3 px-2 md:px-4 bg-white flex gap-3">
+  <div class="rounded-lg py-3 px-2 md:px-4 bg-white flex gap-3 min-h-[56px]">
     <div
       :class="class_icon"
       class="flex-shrink-0"
