@@ -137,12 +137,15 @@ import { KEY_GET_CHATBOT_USER_FUNCT } from '@/views/Dashboard/symbol'
 import { size } from 'lodash'
 import { storeToRefs } from 'pinia'
 import { container } from 'tsyringe'
-import { computed, inject, onMounted } from 'vue'
+import { computed, defineAsyncComponent, inject, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
-import AlertAccountLimitReached from '@/components/AlertModal/AlertAccountLimitReached.vue'
-import HotAlert from '@/components/HotAlert.vue'
+/** Lazy load các component không critical để cải thiện initial load */
+const AlertAccountLimitReached = defineAsyncComponent(
+  () => import('@/components/AlertModal/AlertAccountLimitReached.vue')
+)
+const HotAlert = defineAsyncComponent(() => import('@/components/HotAlert.vue'))
 import DashboardLayout from '@/components/Main/Dashboard/DashboardLayout.vue'
 import Search from '@/components/Main/Dashboard/Search.vue'
 import SelectOrg from '@/components/Main/Dashboard/SelectOrg.vue'
