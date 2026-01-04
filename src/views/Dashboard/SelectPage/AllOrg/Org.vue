@@ -22,6 +22,10 @@
           :src="
             pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_avatar
           "
+          :alt="
+            pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_name ||
+            'Logo tổ chức'
+          "
           class="w-5 h-5 rounded-oval"
         />
         <BriefCaseIcon

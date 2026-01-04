@@ -8,6 +8,7 @@
     >
       <img
         :src="commonStore.partner?.logo?.full"
+        :alt="commonStore.partner?.name || 'Logo'"
         class="h-8"
       />
     </button>

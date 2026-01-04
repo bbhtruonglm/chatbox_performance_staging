@@ -4,6 +4,7 @@
       <img
         src="@/assets/imgs/empty-page.png"
         class="w-56 h-auto"
+        alt="Không có trang nào"
       />
       <div class="text-2xl font-semibold">
         {{ $t('v1.view.main.dashboard.select_page.empty_page.title') }}
@@ -59,7 +60,7 @@ const $router = useRouter()
 const $device = container.resolve(Device)
 
 // /**
-//  * hàm mở dropdown tiền chọn nền tảng kết nối 
+//  * hàm mở dropdown tiền chọn nền tảng kết nối
 //  * @deprecated sử dụng toggleDropdown trong composable usePageManager
 // */
 // const toggleDropdownPickConnectPlatform = inject(
@@ -85,7 +86,7 @@ class Main {
     if (this.SERVICE_DEVICE.isMobile()) return $router.push('/download-app')
 
     // mở dropdown tiền chọn nền tảng kết nối
-    toggleDropdown?.($event, 'RIGHT', )
+    toggleDropdown?.($event, 'RIGHT')
   }
 }
 const $main = new Main()
