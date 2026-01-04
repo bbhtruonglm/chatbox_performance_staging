@@ -20,6 +20,7 @@
           type="text"
           class="focus:outline-none w-full border-b"
           :placeholder="title"
+          :aria-label="title"
         />
         <div v-else>
           {{ model }}

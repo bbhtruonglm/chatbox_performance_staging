@@ -56,6 +56,7 @@
           <img
             v-if="!is_edit"
             :src="org_info.org_avatar || commonStore.partner?.logo?.icon"
+            alt="Organization Avatar"
             class="w-5 h-5"
           />
           <span

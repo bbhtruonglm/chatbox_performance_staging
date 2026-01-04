@@ -23,11 +23,15 @@
         <Loading />
       </div>
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium">
+        <label
+          class="text-sm font-medium"
+          for="group-name-input"
+        >
           {{ $t('Tên nhóm') }}
           <span class="text-red-500">*</span>
         </label>
         <input
+          id="group-name-input"
           v-model="group_name"
           :placeholder="$t('Nhập tên nhóm')"
           class="py-2 px-3 rounded-md border border-gray-200 shadow-sm tex-sm"
@@ -57,6 +61,7 @@
                   type="text"
                   class="text-xs outline-none"
                   :placeholder="$t('Tìm kiếm')"
+                  :aria-label="$t('Tìm kiếm trang')"
                 />
               </div>
             </div>
@@ -66,7 +71,9 @@
               v-for="(pages, key) of grouped_pages"
               class="flex flex-col text-sm"
             >
-              <div class="flex gap-2 items-center font-medium sticky top-0 bg-slate-100 z-10 pb-2">
+              <div
+                class="flex gap-2 items-center font-medium sticky top-0 bg-slate-100 z-10 pb-2"
+              >
                 <PageTypeIcon
                   :page_type="key"
                   class="size-5"
@@ -121,6 +128,7 @@
                   type="text"
                   class="text-xs outline-none"
                   :placeholder="$t('Tìm kiếm')"
+                  :aria-label="$t('Tìm kiếm thành viên')"
                 />
               </div>
             </div>
@@ -195,7 +203,10 @@ import Loading from '@/components/Loading.vue'
 import PageTypeIcon from '@/components/Avatar/PageTypeIcon.vue'
 import { Toast } from '@/utils/helper/Alert/Toast'
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
-import type { MemberShipInfo, OwnerShipInfo } from '@/service/interface/app/billing'
+import type {
+  MemberShipInfo,
+  OwnerShipInfo,
+} from '@/service/interface/app/billing'
 import { nonAccentVn } from '@/service/helper/format'
 import type { IPage, PageType } from '@/service/interface/app/page'
 

@@ -26,6 +26,7 @@
             type="text"
             class="border rounded-full py-1.5 pl-8 px-3 outline-none"
             :placeholder="$t('Tìm kiếm')"
+            :aria-label="$t('Tìm kiếm nhân viên')"
           />
         </div>
         <button
