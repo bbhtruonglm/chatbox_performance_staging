@@ -81,17 +81,29 @@ function teleportToTarget($event?: MouseEvent) {
   const { x, y, width, height } = TARGET.getBoundingClientRect()
   const TRIANGLE_SIZE = 8
 
-  nextTick(() => {
+  // Sử dụng requestAnimationFrame để tránh forced reflow
+  requestAnimationFrame(() => {
+    const dropdownEl = dropdown_ref.value
+    const triangleEl = triangle_ref.value
+
+    if (!dropdownEl || !triangleEl) return
+
+    // PHASE 1: ĐỌC (READ)
+    // Đọc layout properties trước khi thực hiện bất kỳ thay đổi style nào
+    const ddWidth = dropdownEl.offsetWidth
+    const ddHeight = dropdownEl.offsetHeight
+
+    // PHASE 2: TÍNH TOÁN & GHI (CALCULATE & WRITE)
     // Bottom
     if (
       $props.position === 'BOTTOM' ||
       ($props.position === 'TOP' && y <= window.innerHeight / 2)
     ) {
       const TOP = y + height + TRIANGLE_SIZE + $props.distance
-      dropdown_ref.value!.style.left = `${x - $props.back}px`
-      dropdown_ref.value!.style.top = `${TOP}px`
-      triangle_ref.value!.style.left = `${x + width / 2 - TRIANGLE_SIZE}px`
-      triangle_ref.value!.style.top = `${TOP - TRIANGLE_SIZE}px`
+      dropdownEl.style.left = `${x - $props.back}px`
+      dropdownEl.style.top = `${TOP}px`
+      triangleEl.style.left = `${x + width / 2 - TRIANGLE_SIZE}px`
+      triangleEl.style.top = `${TOP - TRIANGLE_SIZE}px`
 
       if ($props.is_fit) _width.value = `${width}px`
     }
@@ -99,20 +111,19 @@ function teleportToTarget($event?: MouseEvent) {
     // Bên phải
     if ($props.position === 'RIGHT') {
       const LEFT = x + width + $props.distance + TRIANGLE_SIZE
-      dropdown_ref.value!.style.left = `${LEFT}px`
-      dropdown_ref.value!.style.top = `${y - $props.back}px`
-      triangle_ref.value!.style.left = `${LEFT - TRIANGLE_SIZE}px`
-      triangle_ref.value!.style.top = `${y + height / 2 - TRIANGLE_SIZE}px`
+      dropdownEl.style.left = `${LEFT}px`
+      dropdownEl.style.top = `${y - $props.back}px`
+      triangleEl.style.left = `${LEFT - TRIANGLE_SIZE}px`
+      triangleEl.style.top = `${y + height / 2 - TRIANGLE_SIZE}px`
 
       if ($props.is_fit) _height.value = `${height}px`
     }
 
     // Bên trái
     if ($props.position === 'LEFT') {
-      dropdown_ref.value!.style.left = `${
-        x - dropdown_ref.value!.offsetWidth - $props.distance
-      }px`
-      dropdown_ref.value!.style.top = `${y - $props.back}px`
+      // Sử dụng giá trị đã đọc ddWidth thay vì truy cập offsetWidth lại
+      dropdownEl.style.left = `${x - ddWidth - $props.distance}px`
+      dropdownEl.style.top = `${y - $props.back}px`
       if ($props.is_fit) _height.value = `${height}px`
     }
 
@@ -121,14 +132,13 @@ function teleportToTarget($event?: MouseEvent) {
       $props.position === 'TOP' ||
       ($props.position === 'BOTTOM' && y > window.innerHeight / 2)
     ) {
-      dropdown_ref.value!.style.left = `${x - $props.back}px`
-      dropdown_ref.value!.style.top = `${
-        y - dropdown_ref.value!.offsetHeight - $props.distance - TRIANGLE_SIZE
+      // Sử dụng giá trị đã đọc ddHeight
+      dropdownEl.style.left = `${x - $props.back}px`
+      dropdownEl.style.top = `${
+        y - ddHeight - $props.distance - TRIANGLE_SIZE
       }px`
-      triangle_ref.value!.style.left = `${x + width / 2 - TRIANGLE_SIZE}px`
-      triangle_ref.value!.style.top = `${
-        y - TRIANGLE_SIZE * 2 - $props.distance
-      }px`
+      triangleEl.style.left = `${x + width / 2 - TRIANGLE_SIZE}px`
+      triangleEl.style.top = `${y - TRIANGLE_SIZE * 2 - $props.distance}px`
 
       if ($props.is_fit) _width.value = `${width}px`
     }
