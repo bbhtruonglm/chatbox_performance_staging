@@ -53,7 +53,7 @@ import { usePageManager } from '@/views/Dashboard/composables/usePageManager'
 import { KEY_GET_CHATBOT_USER_FUNCT } from '@/views/Dashboard/symbol'
 import { size } from 'lodash'
 import { storeToRefs } from 'pinia'
-import { provide } from 'vue'
+import { provide, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 import ConnectPage from '@/views/Dashboard/ConnectPage.vue'
@@ -79,7 +79,15 @@ const { ref_dropdown_pick_connect_platform, connect_page_ref } =
 
 // composable
 const { getMeChatbotUser } = initRequireData()
-const { toggleDropdown, reloadPageData } = usePageManager()
+const { toggleDropdown, reloadPageData, getALlOrgAndPage } = usePageManager()
+
+onMounted(() => {
+  /**
+   * Load dữ liệu nền tảng (Org, Page) ngay ở cấp Dashboard
+   * để đảm bảo các trang con như OrgSetting có dữ liệu
+   */
+  getALlOrgAndPage()
+})
 
 class Main {
   /**vào chế độ chat nhiều trang */

@@ -137,7 +137,7 @@ import { KEY_GET_CHATBOT_USER_FUNCT } from '@/views/Dashboard/symbol'
 import { size } from 'lodash'
 import { storeToRefs } from 'pinia'
 import { container } from 'tsyringe'
-import { computed, defineAsyncComponent, inject, onMounted } from 'vue'
+import { computed, defineAsyncComponent, inject, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
@@ -198,9 +198,23 @@ onMounted(async () => {
   triggerConnectPlatform()
 
   // lấy toàn bộ dữ liệu tổ chức và trang khi component được mount
-  await getALlOrgAndPage()
+  // ĐÃ GỌI Ở DASHBOARD.VUE -> KHÔNG GỌI LẠI TRÁNH DUPLICATE
+  // await getALlOrgAndPage()
 
-  handleLoginWithoutPage()
+  // Chờ dữ liệu load xong mới check
+  if (selectPageStore.is_loading) {
+    const unwatch = watch(
+      () => selectPageStore.is_loading,
+      val => {
+        if (!val) {
+          handleLoginWithoutPage()
+          unwatch()
+        }
+      }
+    )
+  } else {
+    handleLoginWithoutPage()
+  }
 })
 
 /**kích hoạt tự động mở kết nối nền tảng nếu cần */
