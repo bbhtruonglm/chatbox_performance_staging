@@ -10,6 +10,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import type { ModalPosition } from '@/service/interface/vue'
 import { N4SerivceAppPage } from '@/utils/api/N4Service/Page'
+import { BillingAppOrganization, BillingAppGroup } from '@/utils/api/Billing'
 import { Toast } from '@/utils/helper/Alert/Toast'
 import { container } from 'tsyringe'
 import { error } from '@/utils/decorator/Error'
@@ -20,6 +21,7 @@ import { nonAccentVn } from '@/service/helper/format'
 import { preGoToChat } from '@/service/function'
 import { read_link_org } from '@/service/api/chatbox/billing'
 import { toRef } from 'vue'
+import type { OrgInfo } from '@/service/interface/app/billing'
 
 export function usePageManager() {
   const pageStore = usePageStore()
@@ -92,16 +94,23 @@ export function usePageManager() {
       // xóa toàn bộ trang hiện tại
       pageStore.all_page_list = {}
 
-      /**toàn bộ các trang của người dùng */
+      /**
+       * Gọi song song 2 API không phụ thuộc nhau:
+       * - getListActivePage: lấy danh sách trang
+       * - readOrg: lấy danh sách tổ chức
+       */
+      const [PAGE_DATA_2, LIST_ORG] = await Promise.all([
+        new N4SerivceAppPage().getListActivePage({}),
+        new BillingAppOrganization().readOrg(),
+      ])
 
-      const PAGE_DATA_2 = await new N4SerivceAppPage().getListActivePage({})
-      // const PAGE_DATA = await new N4SerivceAppPage().getListPage({})
+      // Lưu list_org vào store
+      orgStore.list_org = LIST_ORG
 
       // nếu không có dữ liệu trang thì thôi
       if (isEmpty(PAGE_DATA_2)) return
 
       // lưu trữ dữ liệu trang
-      // pageStore.all_page_list = PAGE_DATA?.page_list || {}
       pageStore.all_page_list = mapValues(PAGE_DATA_2, item => {
         return {
           group_admin_id: '', // mặc định
@@ -111,9 +120,41 @@ export function usePageManager() {
         }
       })
 
-      // console.log(pageStore.all_page_list, 'all page lisst')
-      // lấy dữ liệu mapping tổ chức và trang
-      pageStore.map_orgs = await read_link_org(keys(pageStore.all_page_list))
+      /**
+       * Gọi song song 2 API tiếp theo:
+       * - read_link_org: lấy mapping page-org (cần page_ids)
+       * - readGroup nếu có org_ids
+       */
+      const PAGE_IDS = keys(pageStore.all_page_list)
+      const ORG_IDS = LIST_ORG?.map(org => org.org_id || '') || []
+
+      const [MAP_ORGS] = await Promise.all([
+        read_link_org(PAGE_IDS),
+        // Gọi readGroup song song nếu có org_ids
+        ORG_IDS.length > 0
+          ? new BillingAppGroup()
+              .readAllGroup(ORG_IDS)
+              .then((groups: IGroup[]) => {
+                // Lưu list group vào store
+                orgStore.list_group = groups
+                // Reset map
+                pageManagerStore.pape_to_group_map = {}
+                // Lặp qua các nhóm lưu mapping
+                groups?.forEach((group: IGroup) => {
+                  group?.group_pages?.forEach((page_id: string) => {
+                    if (!page_id || !group?.group_id || !group?.org_id) return
+                    pageManagerStore.pape_to_group_map[page_id] = [
+                      ...(pageManagerStore.pape_to_group_map[page_id] || []),
+                      group?.group_id,
+                    ]
+                  })
+                })
+              })
+          : Promise.resolve(),
+      ])
+
+      // Lưu map_orgs
+      pageStore.map_orgs = MAP_ORGS
     }
     /**ẩn hiện dropdown */
     toggleDropdown(

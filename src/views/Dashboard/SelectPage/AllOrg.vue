@@ -159,15 +159,16 @@ const $main = new Main()
 //   // })
 // })
 
-watch(
-  () => orgStore.list_org,
-  list => {
-    if (list && list.length) {
-      $main.readGroup()
-    }
-  },
-  { immediate: true } // chạy luôn khi component mount
-)
+// ĐÃ CHUYỂN SANG GỌI SONG SONG TRONG usePageManager.getALlOrgAndPage()
+// watch(
+//   () => orgStore.list_org,
+//   list => {
+//     if (list && list.length) {
+//       $main.readGroup()
+//     }
+//   },
+//   { immediate: true }
+// )
 
 // cung cấp hàm xử lý khi chọn trang
 provide(KEY_ADVANCE_SELECT_AGE_FUNCT, $main.triggerSelectPage)
