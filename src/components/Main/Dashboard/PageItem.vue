@@ -38,6 +38,7 @@
       <PageTypeIcon
         :page_type="page_info?.type"
         class="flex-shrink-0 w-3.5 h-3.5"
+        :alt="page_info?.type"
       />
       <div class="text-xs text-slate-500 flex-grow truncate min-w-0">
         {{ page_info?.fb_page_id }}
