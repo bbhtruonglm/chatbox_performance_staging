@@ -91,6 +91,7 @@
             <Toggle
               v-model="org_is_only_visible_client_of_staff"
               class_toggle="peer-checked:bg-black"
+              :aria-label="$t('Hiện hội thoại theo nhân viên chỉ định')"
             />
           </div>
         </div>
@@ -111,6 +112,7 @@
             <Toggle
               v-model="org_is_hide_page_avatar"
               class_toggle="peer-checked:bg-black"
+              :aria-label="$t('Ẩn ảnh đại diện của trang')"
             />
           </div>
         </div>
