@@ -8,6 +8,10 @@ export default defineConfig(() => {
   return {
     // base lấy từ lệnh build, hoặc mặc định là root
     base: process.env.VITE_BASE_URL || '/',
+    /** enable source maps cho production để debug và cải thiện Lighthouse */
+    build: {
+      sourcemap: true,
+    },
     plugins: [
       vue({
         template: {

@@ -15,6 +15,8 @@
       frameborder="0"
       title="Đăng nhập Facebook"
       aria-label="Đăng nhập bằng Facebook"
+      sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+      referrerpolicy="no-referrer-when-downgrade"
     />
   </div>
 </template>

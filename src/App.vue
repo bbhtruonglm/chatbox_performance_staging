@@ -108,8 +108,52 @@ class Main {
     // thay đổi title
     document.title = commonStore.partner?.name || ''
 
+    // cập nhật meta tags cho SEO
+    $main.updateMetaTags()
+
     // thay đổi favicon
     $main.setFavicon()
+  }
+  /** Cập nhật động các meta tags SEO */
+  updateMetaTags() {
+    /** Tên partner */
+    const PARTNER_NAME = commonStore.partner?.name || ''
+    /** Description động */
+    const DESCRIPTION = `${PARTNER_NAME} - Nền tảng quản lý tin nhắn, chăm sóc khách hàng đa kênh. Hỗ trợ Facebook, Zalo, và nhiều kênh khác.`
+
+    // Cập nhật meta description
+    const metaDesc = document.querySelector('meta[name="description"]')
+    if (metaDesc) metaDesc.setAttribute('content', DESCRIPTION)
+
+    // Cập nhật OG title
+    const ogTitle = document.querySelector('meta[property="og:title"]')
+    if (ogTitle) ogTitle.setAttribute('content', PARTNER_NAME)
+
+    // Cập nhật OG description
+    const ogDesc = document.querySelector('meta[property="og:description"]')
+    if (ogDesc) ogDesc.setAttribute('content', DESCRIPTION)
+
+    // Cập nhật Twitter title
+    const twitterTitle = document.querySelector('meta[name="twitter:title"]')
+    if (twitterTitle) twitterTitle.setAttribute('content', PARTNER_NAME)
+
+    // Cập nhật Twitter description
+    const twitterDesc = document.querySelector(
+      'meta[name="twitter:description"]'
+    )
+    if (twitterDesc) twitterDesc.setAttribute('content', DESCRIPTION)
+
+    // Cập nhật OG image nếu có logo
+    if (commonStore.partner?.logo?.full) {
+      /** OG Image tag */
+      let ogImage = document.querySelector('meta[property="og:image"]')
+      if (!ogImage) {
+        ogImage = document.createElement('meta')
+        ogImage.setAttribute('property', 'og:image')
+        document.head.appendChild(ogImage)
+      }
+      ogImage.setAttribute('content', commonStore.partner.logo.full)
+    }
   }
   /**Thay đổi favicon */
   setFavicon() {
