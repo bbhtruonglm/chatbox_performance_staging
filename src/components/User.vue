@@ -1,5 +1,10 @@
 <template>
-  <button @click="openMenu">
+  <button
+    @click="openMenu"
+    type="button"
+    :aria-label="$t('v1.view.main.dashboard.header.personal')"
+    aria-haspopup="menu"
+  >
     <div class="relative w-fit mx-auto">
       <Badge
         v-if="orgStore.count_noti"
