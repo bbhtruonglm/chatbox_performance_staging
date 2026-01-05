@@ -46,13 +46,8 @@
         </button>
       </div>
       <GroupSection :title="$t('Trang')">
-        <template v-for="os of orgStore.list_os">
+        <template v-for="os of group_page_list">
           <PageItem
-            v-if="
-              selected_group?.group_pages?.includes(
-                os?.page_info?.fb_page_id || ''
-              )
-            "
             :page_info="os?.page_info"
             :checkbox_is_visible="false"
             class="cursor-pointer"
@@ -60,11 +55,8 @@
         </template>
       </GroupSection>
       <GroupSection :title="$t('Thành viên')">
-        <template v-for="ms of orgStore.list_ms">
-          <ActorItem
-            v-if="selected_group?.group_staffs?.includes(ms?.staff_id || '')"
-            class="cursor-pointer"
-          >
+        <template v-for="ms of group_staff_list">
+          <ActorItem class="cursor-pointer">
             <template #avatar>
               <StaffAvatar
                 :id="ms?.user_info?.user_id"
@@ -105,7 +97,7 @@
   />
 </template>
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, computed } from 'vue'
 import { container } from 'tsyringe'
 import { BillingAppGroup } from '@/utils/api/Billing'
 import { useOrgStore } from '@/stores'
@@ -132,6 +124,22 @@ const ref_confirm_delete_group_modal =
 const groups = ref<IGroup[]>()
 /**dữ liệu của nhóm được chọn */
 const selected_group = ref<IGroup>()
+
+/** danh sách trang trong nhóm */
+const group_page_list = computed(() => {
+  if (!selected_group.value?.group_pages) return []
+  return orgStore.list_os?.filter(os =>
+    selected_group.value?.group_pages?.includes(os.page_info?.fb_page_id || '')
+  )
+})
+
+/** danh sách nhân viên trong nhóm */
+const group_staff_list = computed(() => {
+  if (!selected_group.value?.group_staffs) return []
+  return orgStore.list_ms?.filter(ms =>
+    selected_group.value?.group_staffs?.includes(ms.staff_id || '')
+  )
+})
 
 class Main {
   /**mở modal thêm/sửa Nhóm */
