@@ -4,25 +4,7 @@ Tài liệu này tổng hợp các thay đổi đã thực hiện để tối ư
 
 ## 1. Các hạng mục đã tối ưu hóa (Improved)
 
-### 1.1. Google Analytics (GA4)
-
-- **Vấn đề cũ**: Script GA được nhúng trực tiếp trong `<head>` gây render-blocking, làm chậm chỉ số FCP (First Contentful Paint) và LCP (Largest Contentful Paint).
-- **Giải pháp**: Chuyển sang kỹ thuật **Defer Loading**. Script GA chỉ được inject vào DOM sau khi sự kiện `window.onload` kích hoạt.
-- **Kết quả**:
-  - Loại bỏ hoàn toàn JavaScript blocking trong quá trình tải trang ban đầu.
-  - Cải thiện đáng kể điểm Performance trên Lighthouse.
-- **Code snippet**:
-  ```javascript
-  window.addEventListener('load', function () {
-    var gtagScript = document.createElement('script')
-    gtagScript.async = true
-    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-PL4M71RS48'
-    document.head.appendChild(gtagScript)
-    // ... init gtag
-  })
-  ```
-
-### 1.2. SEO & Meta Tags
+### 1.1. SEO & Meta Tags
 
 - **Vấn đề cũ**: Thiếu các thẻ meta quan trọng, ảnh hưởng điểm SEO và trải nghiệm chia sẻ link.
 - **Giải pháp**: Bổ sung đầy đủ bộ thẻ Meta chuẩn:
@@ -45,7 +27,7 @@ Tài liệu này tổng hợp các thay đổi đã thực hiện để tối ư
   />
   ```
 
-### 1.3. Accessibility (Khả năng truy cập)
+### 1.2. Accessibility (Khả năng truy cập)
 
 - **Vấn đề cũ**: Các ô input và button thiếu `aria-label`, `alt` text cho ảnh.
 - **Giải pháp**:
@@ -84,6 +66,15 @@ Dưới đây là các phần không thể tối ưu sâu hơn hoặc buộc ph�
 
 - **Mô tả**: `check-ad-blocker.js` và các script tiện ích khác.
 - **Lý do**: Cần thiết để đảm bảo tính toàn vẹn của ứng dụng và doanh thu/nghiệp vụ. Việc defer quá sâu có thể làm mất tác dụng của các script này.
+
+### 2.3. Google Analytics (GA4)
+
+- **Vấn đề**: Script tracking của bên thứ ba (Google) gây ảnh hưởng đến chỉ số Performance (TBT, LCP) do cần load và execute script ngoại vi.
+- **Hiện trạng**: Đã áp dụng `Defer loading` (sau window load) nhưng vẫn gây gánh nặng lên main-thread sau khi page load xong.
+- **Hạn chế can thiệp**:
+  - Do yêu cầu nghiệp vụ cần tracking chính xác hành vi người dùng ngay khi vào trang.
+  - Là script của bên thứ ba (3rd party), không thể tối ưu hóa nội dung script của họ.
+  - Việc chuyển hoàn toàn sang Server-side tracking (để loại bỏ client script) đòi hỏi thay đổi lớn về hạ tầng và chưa khả thi ở giai đoạn này.
 
 ## 3. Khuyến nghị tiếp theo
 
