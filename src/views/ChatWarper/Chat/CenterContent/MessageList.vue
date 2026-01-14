@@ -161,8 +161,10 @@
         :key="message.temp_id"
         class="relative group flex flex-col gap-1 items-end py-2"
       >
-        <div class="message-size group relative flex gap-1 items-end">
+        <div class="w-fit group relative flex gap-1 items-end">
+          <!-- Hiển thị text message nếu có text -->
           <PageTempTextMessage
+            v-if="message.text"
             :text="message.text"
             :mentions="message.mentions"
             :snap_replay_message="message.snap_replay_message"
@@ -171,9 +173,19 @@
           <!-- :class="{
             'border border-red-500 rounded-lg': message.error,
           }" -->
+          <!-- Hiển thị attachment message nếu có attachments -->
+          <PageTempAttachmentMessage
+            v-else-if="message.message_attachments?.length"
+            :attachments="message.message_attachments"
+            :sizes="message.attachment_size"
+            :platform_type="select_conversation?.platform_type"
+            :class="{
+              'border border-red-500': message.error,
+            }"
+          />
           <StaffAvatar
             :id="chatbotUserStore.chatbot_user?.user_id"
-            class="w-6 h-6 rounded-oval flex-shrink-0"
+            class="w-8 h-8 rounded-oval flex-shrink-0"
           />
         </div>
         <SendStatus :is_error="message.error" />
@@ -201,6 +213,7 @@ import Loading from '@/components/Loading.vue'
 import TimeSplit from '@/views/ChatWarper/Chat/CenterContent/MessageList/TimeSplit.vue'
 import UnsupportMessage from '@/views/ChatWarper/Chat/CenterContent/MessageList/UnsupportMessage.vue'
 import PageTempTextMessage from '@/views/ChatWarper/Chat/CenterContent/MessageList/PageTempTextMessage.vue'
+import PageTempAttachmentMessage from '@/views/ChatWarper/Chat/CenterContent/MessageList/PageTempAttachmentMessage.vue'
 import SendStatus from '@/views/ChatWarper/Chat/CenterContent/MessageList/SendStatus.vue'
 import SystemMessage from '@/views/ChatWarper/Chat/CenterContent/MessageList/SystemMessage.vue'
 import ClientRead from '@/views/ChatWarper/Chat/CenterContent/MessageList/ClientRead.vue'
@@ -387,11 +400,13 @@ function isLastPageMessage(message: MessageInfo, index: number) {
 function socketNewMessage({ detail }: CustomEvent) {
   // nếu không có dữ liệu thì thôi
   if (!detail) return
+  console.log('socketNewMessage', detail)
 
   // nếu không phải của khách hàng đang chọn thì chặn
+  if (detail.fb_client_id !== select_conversation.value?.fb_client_id) return
   if (
-    detail.fb_page_id !== select_conversation.value?.fb_page_id ||
-    detail.fb_client_id !== select_conversation.value.fb_client_id
+    detail.fb_page_id !== select_conversation.value?.fb_page_id &&
+    select_conversation.value?.platform_type !== 'FB_INSTAGRAM'
   )
     return
 
@@ -435,18 +450,70 @@ function socketNewMessage({ detail }: CustomEvent) {
         (message.replay_mid && message.replay_mid === detail?.replay_mid)
     )
 
+  /**
+   * Xử lý clear temp message dựa trên URL attachment
+   * Áp dụng cho các platform không phải FB khi gửi nhiều ảnh
+   * Socket sẽ trả về từng tin riêng, mỗi tin có 1 attachment
+   */
+  if (detail?.message_attachments?.length) {
+    /** Lấy danh sách URL của attachment trong tin nhắn socket */
+    const SOCKET_URLS = detail.message_attachments
+      .map((att: any) => att?.payload?.url || att?.url)
+      .filter(Boolean)
+
+    /** Flag để check đã xóa temp message chưa */
+    let is_cleared = false
+
+    /** Xóa temp message có attachment URL trùng khớp */
+    if (SOCKET_URLS.length) {
+      /** Kiểm tra và xóa temp message có URL trùng */
+      const REMOVED = remove(messageStore.send_message_list, temp_msg => {
+        /** Kiểm tra temp message có attachment nào trùng URL không */
+        const HAS_MATCHING_URL = temp_msg.message_attachments?.some(temp_att =>
+          SOCKET_URLS.includes(temp_att.url)
+        )
+        return HAS_MATCHING_URL
+      })
+      /** Đánh dấu đã clear nếu có xóa được */
+      if (REMOVED.length) is_cleared = true
+    }
+
+    /**
+     * Fallback cho Zalo và các platform khác:
+     * URL từ server có thể khác với URL temp (re-upload, encode khác)
+     * Nếu tin nhắn socket là từ page và có attachment, xóa temp message attachment cũ nhất
+     */
+    if (!is_cleared && detail?.message_type === 'page') {
+      /** Tìm temp message có attachment */
+      const TEMP_INDEX = messageStore.send_message_list.findIndex(
+        temp_msg => temp_msg.message_attachments?.length
+      )
+      /** Nếu tìm thấy thì xóa */
+      if (TEMP_INDEX !== -1) {
+        messageStore.send_message_list.splice(TEMP_INDEX, 1)
+      }
+    }
+  }
+
   // nếu đang ở vị trí bottom thì dùng scrollToBottomMessage
   if (IS_BOTTOM) scrollToBottomMessage(messageStore.list_message_id)
+
+  // Update vị trí "người đã đọc" sau khi có tin nhắn mới
+  nextTick(() => {
+    visibleFirstClientReadAvatar()
+  })
 }
 /**xử lý socket cập nhật tin nhắn hiện tại */
 function socketUpdateMssage({ detail }: CustomEvent) {
   // nếu không có dữ liệu thì thôi
   if (!detail) return
+  console.log('socketUpdateMssage', detail)
 
   // nếu không phải của khách hàng đang chọn thì chặn
+  if (detail.fb_client_id !== select_conversation.value?.fb_client_id) return
   if (
-    detail.fb_page_id !== select_conversation.value?.fb_page_id ||
-    detail.fb_client_id !== select_conversation.value.fb_client_id
+    detail.fb_page_id !== select_conversation.value?.fb_page_id &&
+    select_conversation.value?.platform_type !== 'FB_INSTAGRAM'
   )
     return
 
@@ -702,9 +769,4 @@ const tryLoadUntilScrollable = (cb: CbError) => {
   )
 }
 </script>
-<style scoped lang="scss">
-.message-size {
-  @apply max-w-96;
-  width: fit-content;
-}
-</style>
+<style scoped lang="scss"></style>
