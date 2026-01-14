@@ -13,16 +13,11 @@
       v-if="iframe_src"
       :src="iframe_src"
       frameborder="0"
-      title="Đăng nhập Facebook"
-      aria-label="Đăng nhập bằng Facebook"
-      sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-      referrerpolicy="no-referrer-when-downgrade"
-      alt="Đăng nhập Facebook"
     />
   </div>
 </template>
 <script setup lang="ts">
-import { container } from 'tsyringe'
+import { container } from 'tsyringe';
 import { onMounted, onUnmounted, ref } from 'vue'
 import { CROSS_LOGIN_URL } from '@/configs/constants/botbanhang'
 import { TriggerEventRef } from '@/utils/helper/TriggerEventRef'

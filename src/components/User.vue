@@ -1,10 +1,5 @@
 <template>
-  <button
-    @click="openMenu"
-    type="button"
-    :aria-label="$t('v1.view.main.dashboard.header.personal')"
-    aria-haspopup="menu"
-  >
+  <button @click="openMenu">
     <div class="relative w-fit mx-auto">
       <Badge
         v-if="orgStore.count_noti"
@@ -105,7 +100,6 @@ import { ExternalSite } from '@/utils/helper/ExternalSite'
 import { container } from 'tsyringe'
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { debounce } from 'lodash'
 
 import StaffAvatar from '@/components/Avatar/StaffAvatar.vue'
 import Badge from '@/components/Badge.vue'
@@ -158,15 +152,14 @@ const modal_keyboard_shortcut =
 /** đếm số thông báo khi khởi động / Ẩn vì đang dùng watch để call rồi */
 // onMounted(countNoti)
 
-/** khi chọn lại org thì đếm lại số thông báo - debounce 300ms để tránh gọi API nhiều lần */
-const debouncedCountNoti = debounce(countNoti, 300)
+/** khi chọn lại org thì đếm lại số thông báo */
 watch(
   () => [
     orgStore.selected_org_id,
     orgStore.list_org,
     orgStore.is_selected_all_org,
   ],
-  debouncedCountNoti
+  countNoti
 )
 
 /** đếm số thông báo */

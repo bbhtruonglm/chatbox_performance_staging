@@ -9,7 +9,6 @@
       :src="loadImageUrl()"
       @error="onImageError"
       @load="removeAnimatePulse"
-      alt="Avatar người dùng"
       class="w-full h-full"
     />
   </div>

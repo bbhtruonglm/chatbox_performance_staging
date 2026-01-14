@@ -26,7 +26,6 @@
             type="text"
             class="border rounded-full py-1.5 pl-8 px-3 outline-none"
             :placeholder="$t('Tìm kiếm')"
-            :aria-label="$t('Tìm kiếm nhân viên')"
           />
         </div>
         <button
@@ -40,61 +39,55 @@
 
     <template #item>
       <div
-        ref="list_ref"
-        class="grid gap-6 grid-cols-1 md:grid-cols-4 max-h-[50dvh] overflow-auto min-h-[100px]"
+        class="grid gap-6 grid-cols-1 md:grid-cols-4 max-h-[50dvh] overflow-auto"
       >
-        <template v-if="orgStore.is_loading">
-          <ActorItemSkeleton v-for="i in 12" />
-        </template>
-        <template v-else>
-          <template v-for="staff of visible_staff">
-            <ActorItem
-              v-show="showEmployee(staff)"
-              @click="activeMs(staff)"
-              :class="{
-                'opacity-50': !staff.ms_is_active,
-              }"
-              class="cursor-pointer"
-            >
-              <template #avatar>
-                <StaffAvatar
-                  :id="staff?.user_info?.user_id"
-                  class="w-8 h-8 rounded-oval"
+        <template v-for="staff of orgStore.list_ms">
+          <ActorItem
+            v-show="showEmployee(staff)"
+            @click="activeMs(staff)"
+            :class="{
+              'opacity-50': !staff.ms_is_active,
+            }"
+            class="cursor-pointer"
+          >
+            <template #avatar>
+              <StaffAvatar
+                :id="staff?.user_info?.user_id"
+                class="w-8 h-8 rounded-oval"
+              />
+            </template>
+            <template #name>
+              {{ staff?.user_info?.full_name }}
+            </template>
+            <template #after-name>
+              <div
+                @click.stop="prepareInactiveStaff(staff)"
+                v-tooltip="
+                  $t('v1.view.main.dashboard.org.setting.remove_staff')
+                "
+                class="group/minus hidden group-hover:flex"
+              >
+                <MinusOutlineIcon
+                  class="w-4 h-4 text-slate-500 group-hover/minus:hidden"
                 />
-              </template>
-              <template #name>
-                {{ staff?.user_info?.full_name }}
-              </template>
-              <template #after-name>
-                <div
-                  @click.stop="prepareInactiveStaff(staff)"
-                  v-tooltip="
-                    $t('v1.view.main.dashboard.org.setting.remove_staff')
-                  "
-                  class="group/minus hidden group-hover:flex"
-                >
-                  <MinusOutlineIcon
-                    class="w-4 h-4 text-slate-500 group-hover/minus:hidden"
-                  />
-                  <MinusIcon
-                    class="w-4 h-4 text-slate-900 hidden group-hover/minus:block"
-                  />
-                </div>
-              </template>
-              <template #description>
-                <div class="text-xs text-slate-500 flex-grow truncate min-w-0">
-                  <template v-if="$member_ship_helper.isAdmin(staff)">
-                    {{ $t('v1.view.main.dashboard.org_staff.admin') }}
-                  </template>
-                  <template v-else>
-                    {{ $t('v1.view.main.dashboard.org_staff.member') }}
-                  </template>
-                  -
-                  {{ staff?.staff_id }}
-                </div>
-              </template>
-            </ActorItem>
-          </template>
+                <MinusIcon
+                  class="w-4 h-4 text-slate-900 hidden group-hover/minus:block"
+                />
+              </div>
+            </template>
+            <template #description>
+              <div class="text-xs text-slate-500 flex-grow truncate min-w-0">
+                <template v-if="$member_ship_helper.isAdmin(staff)">
+                  {{ $t('v1.view.main.dashboard.org_staff.admin') }}
+                </template>
+                <template v-else>
+                  {{ $t('v1.view.main.dashboard.org_staff.member') }}
+                </template>
+                -
+                {{ staff?.staff_id }}
+              </div>
+            </template>
+          </ActorItem>
         </template>
       </div>
     </template>
@@ -111,7 +104,7 @@
 </template>
 <script setup lang="ts">
 import { useOrgStore } from '@/stores'
-import { onMounted, ref, watch, computed } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { toastError } from '@/service/helper/alert'
 import { read_ms } from '@/service/api/chatbox/billing'
 import { formatDistanceToNow } from 'date-fns'
@@ -122,7 +115,6 @@ import { SingletonMemberShipHelper } from '@/utils/helper/Billing/MemberShip'
 import CardItem from '@/components/Main/Dashboard/CardItem.vue'
 import StaffAvatar from '@/components/Avatar/StaffAvatar.vue'
 import ActorItem from '@/components/Main/Dashboard/ActorItem.vue'
-import ActorItemSkeleton from '@/components/Main/Dashboard/ActorItemSkeleton.vue'
 import ConfirmInactive from '@/views/Dashboard/Org/Setting/Staff/ConfirmInactive.vue'
 import ConnectPage from '@/views/Dashboard/ConnectPage.vue'
 
@@ -136,7 +128,6 @@ import { ConfirmSingleton } from '@/utils/helper/Alert/Confirm'
 import { useI18n } from 'vue-i18n'
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import { nonAccentVn } from '@/service/helper/format'
-import { useInfiniteScroll } from '@vueuse/core'
 
 const orgStore = useOrgStore()
 const $member_ship_helper = SingletonMemberShipHelper.getInst()
@@ -156,36 +147,9 @@ const connect_page_ref = ref<InstanceType<typeof ConnectPage>>()
 const search_employee = ref('')
 
 // nạp danh sách nhân viên khi component được mount
-// Đã load ở Setting.vue
-// onMounted(readMs)
+onMounted(readMs)
 // nạp danh sách nhân viên khi chọn tổ chức khác
-// watch(() => orgStore.selected_org_id, readMs)
-
-/**danh sách element trang */
-const list_ref = ref<HTMLElement | null>(null)
-
-/** giới hạn hiển thị */
-const display_limit = ref(80)
-
-useInfiniteScroll(
-  () => list_ref.value,
-  () => {
-    // load more
-    display_limit.value += 20
-  },
-  { distance: 10 }
-)
-
-/** danh sách nhân viên hiển thị */
-const visible_staff = computed(() => {
-  return orgStore.list_ms
-    ?.filter(staff => showEmployee(staff))
-    .slice(0, display_limit.value)
-})
-
-watch(search_employee, () => {
-  display_limit.value = 80
-})
+watch(() => orgStore.selected_org_id, readMs)
 
 /** ẩn hiện nhân sự */
 function showEmployee(ms: MemberShipInfo) {

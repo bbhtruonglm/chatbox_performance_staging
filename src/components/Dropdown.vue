@@ -80,25 +80,18 @@ function teleportToTarget($event?: MouseEvent) {
   if (!TARGET) return
   const { x, y, width, height } = TARGET.getBoundingClientRect()
   const TRIANGLE_SIZE = 8
-  const VIEWPORT_HEIGHT = window.innerHeight
 
   nextTick(() => {
-    const dropdownEl = dropdown_ref.value
-    const triangleEl = triangle_ref.value
-
-    if (!dropdownEl || !triangleEl) return
-
     // Bottom
     if (
       $props.position === 'BOTTOM' ||
-      ($props.position === 'TOP' && y <= VIEWPORT_HEIGHT / 2)
+      ($props.position === 'TOP' && y <= window.innerHeight / 2)
     ) {
-      // NOTE: Case này KHÔNG CẦN đọc offsetWidth/Height -> NO REFLOW!
       const TOP = y + height + TRIANGLE_SIZE + $props.distance
-      dropdownEl.style.left = `${x - $props.back}px`
-      dropdownEl.style.top = `${TOP}px`
-      triangleEl.style.left = `${x + width / 2 - TRIANGLE_SIZE}px`
-      triangleEl.style.top = `${TOP - TRIANGLE_SIZE}px`
+      dropdown_ref.value!.style.left = `${x - $props.back}px`
+      dropdown_ref.value!.style.top = `${TOP}px`
+      triangle_ref.value!.style.left = `${x + width / 2 - TRIANGLE_SIZE}px`
+      triangle_ref.value!.style.top = `${TOP - TRIANGLE_SIZE}px`
 
       if ($props.is_fit) _width.value = `${width}px`
     }
@@ -106,34 +99,36 @@ function teleportToTarget($event?: MouseEvent) {
     // Bên phải
     if ($props.position === 'RIGHT') {
       const LEFT = x + width + $props.distance + TRIANGLE_SIZE
-      dropdownEl.style.left = `${LEFT}px`
-      dropdownEl.style.top = `${y - $props.back}px`
-      triangleEl.style.left = `${LEFT - TRIANGLE_SIZE}px`
-      triangleEl.style.top = `${y + height / 2 - TRIANGLE_SIZE}px`
+      dropdown_ref.value!.style.left = `${LEFT}px`
+      dropdown_ref.value!.style.top = `${y - $props.back}px`
+      triangle_ref.value!.style.left = `${LEFT - TRIANGLE_SIZE}px`
+      triangle_ref.value!.style.top = `${y + height / 2 - TRIANGLE_SIZE}px`
 
       if ($props.is_fit) _height.value = `${height}px`
     }
 
     // Bên trái
     if ($props.position === 'LEFT') {
-      const ddWidth = dropdownEl.offsetWidth
-      dropdownEl.style.left = `${x - ddWidth - $props.distance}px`
-      dropdownEl.style.top = `${y - $props.back}px`
+      dropdown_ref.value!.style.left = `${
+        x - dropdown_ref.value!.offsetWidth - $props.distance
+      }px`
+      dropdown_ref.value!.style.top = `${y - $props.back}px`
       if ($props.is_fit) _height.value = `${height}px`
     }
 
     // Top
     if (
       $props.position === 'TOP' ||
-      ($props.position === 'BOTTOM' && y > VIEWPORT_HEIGHT / 2)
+      ($props.position === 'BOTTOM' && y > window.innerHeight / 2)
     ) {
-      const ddHeight = dropdownEl.offsetHeight
-      dropdownEl.style.left = `${x - $props.back}px`
-      dropdownEl.style.top = `${
-        y - ddHeight - $props.distance - TRIANGLE_SIZE
+      dropdown_ref.value!.style.left = `${x - $props.back}px`
+      dropdown_ref.value!.style.top = `${
+        y - dropdown_ref.value!.offsetHeight - $props.distance - TRIANGLE_SIZE
       }px`
-      triangleEl.style.left = `${x + width / 2 - TRIANGLE_SIZE}px`
-      triangleEl.style.top = `${y - TRIANGLE_SIZE * 2 - $props.distance}px`
+      triangle_ref.value!.style.left = `${x + width / 2 - TRIANGLE_SIZE}px`
+      triangle_ref.value!.style.top = `${
+        y - TRIANGLE_SIZE * 2 - $props.distance
+      }px`
 
       if ($props.is_fit) _width.value = `${width}px`
     }

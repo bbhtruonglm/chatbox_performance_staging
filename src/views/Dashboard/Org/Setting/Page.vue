@@ -25,7 +25,6 @@
             type="text"
             class="border rounded-full py-1.5 pl-8 px-3 outline-none"
             :placeholder="$t('Tìm kiếm')"
-            :aria-label="$t('Tìm kiếm trang')"
           />
         </div>
         <button
@@ -38,39 +37,31 @@
     </template>
     <template #item>
       <div
-        ref="list_ref"
-        class="grid gap-6 grid-cols-1 md:grid-cols-4 max-h-[50dvh] overflow-auto min-h-[100px]"
+        class="grid gap-6 grid-cols-1 md:grid-cols-4 max-h-[50dvh] overflow-auto"
       >
-        <template v-if="orgStore.is_loading">
-          <ActorItemSkeleton v-for="i in 12" />
-        </template>
-        <template v-else>
-          <template v-for="os of visible_pages">
-            <PageItem
-              v-if="os?.page_info"
-              :page_info="os?.page_info"
-              :checkbox_is_visible="false"
-              class="cursor-pointer"
-              v-show="showPage(os?.page_info)"
-            >
-              <template #after-name>
-                <div
-                  @click.stop="prepareInactivePage(os?.page_info)"
-                  v-tooltip="
-                    $t('v1.view.main.dashboard.select_page.cancel_page')
-                  "
-                  class="group/minus hidden group-hover:flex"
-                >
-                  <MinusOutlineIcon
-                    class="w-4 h-4 text-slate-500 group-hover/minus:hidden"
-                  />
-                  <MinusIcon
-                    class="w-4 h-4 text-slate-900 hidden group-hover/minus:block"
-                  />
-                </div>
-              </template>
-            </PageItem>
-          </template>
+        <template v-for="os of orgStore.list_os">
+          <PageItem
+            v-if="os?.page_info"
+            :page_info="os?.page_info"
+            :checkbox_is_visible="false"
+            class="cursor-pointer"
+            v-show="showPage(os?.page_info)"
+          >
+            <template #after-name>
+              <div
+                @click.stop="prepareInactivePage(os?.page_info)"
+                v-tooltip="$t('v1.view.main.dashboard.select_page.cancel_page')"
+                class="group/minus hidden group-hover:flex"
+              >
+                <MinusOutlineIcon
+                  class="w-4 h-4 text-slate-500 group-hover/minus:hidden"
+                />
+                <MinusIcon
+                  class="w-4 h-4 text-slate-900 hidden group-hover/minus:block"
+                />
+              </div>
+            </template>
+          </PageItem>
         </template>
       </div>
     </template>
@@ -91,11 +82,10 @@ import { toastError } from '@/service/helper/alert'
 import { nonAccentVn } from '@/service/helper/format'
 import { useOrgStore } from '@/stores'
 import { remove } from 'lodash'
-import { onMounted, ref, watch, computed } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 import CardItem from '@/components/Main/Dashboard/CardItem.vue'
 import PageItem from '@/components/Main/Dashboard/PageItem.vue'
-import ActorItemSkeleton from '@/components/Main/Dashboard/ActorItemSkeleton.vue'
 
 import ConnectPage from '@/views/Dashboard/ConnectPage.vue'
 import ConfirmInactive from '@/views/Dashboard/Org/Setting/Page/ConfirmInactive.vue'
@@ -106,7 +96,6 @@ import StackIcon from '@/components/Icons/Stack.vue'
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 
 import type { IPage } from '@/service/interface/app/page'
-import { useInfiniteScroll } from '@vueuse/core'
 
 const orgStore = useOrgStore()
 
@@ -122,35 +111,9 @@ const connect_page_ref = ref<InstanceType<typeof ConnectPage>>()
 const search_page = ref('')
 
 // nạp dữ liệu trang khi component được mount
-// Đã load ở Setting.vue
-// onMounted(getOs)
+onMounted(getOs)
 // nạp dữ liệu trang khi tổ chức được chọn
-// watch(() => orgStore.selected_org_id, getOs)
-/**danh sách element trang */
-const list_ref = ref<HTMLElement | null>(null)
-
-/** giới hạn hiển thị */
-const display_limit = ref(80)
-
-useInfiniteScroll(
-  () => list_ref.value,
-  () => {
-    // load more
-    display_limit.value += 20
-  },
-  { distance: 10 }
-)
-
-/** danh sách trang hiển thị */
-const visible_pages = computed(() => {
-  return orgStore.list_os
-    ?.filter(os => os?.page_info && showPage(os.page_info))
-    .slice(0, display_limit.value)
-})
-
-watch(search_page, () => {
-  display_limit.value = 80
-})
+watch(() => orgStore.selected_org_id, getOs)
 
 /** ẩn hiện trang */
 function showPage(page: IPage) {

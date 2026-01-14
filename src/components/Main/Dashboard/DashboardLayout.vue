@@ -1,18 +1,16 @@
 <template>
   <div class="h-full w-full flex relative gap-3">
-    <nav
+    <div
       class="h-full flex-shrink-0 w-56 bg-white rounded-md p-2 gap-1 flex-col overflow-y-auto hidden md:flex"
-      aria-label="Menu điều hướng"
     >
       <slot name="menu" />
-    </nav>
-    <main
+    </div>
+    <div
       :class="class_content"
       class="w-full h-full min-w-0"
-      role="main"
     >
       <slot name="content" />
-    </main>
+    </div>
   </div>
 </template>
 <script setup lang="ts">

@@ -6,10 +6,7 @@
       </div> -->
       <img
         :src="commonStore.partner?.logo?.icon"
-        :alt="commonStore.partner?.name || 'Logo'"
         class="w-10 h-10 flex-shrink-0"
-        width="40"
-        height="40"
       />
       <ReloadIcon class="w-5 h-5 text-slate-500 flex-shrink-0" />
       <component

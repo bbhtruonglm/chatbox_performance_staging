@@ -3,18 +3,13 @@
     <span>
       {{ $t('Bạn mới sử dụng _', { name: commonStore.partner?.name }) }}
     </span>
-    <button
-      type="button"
+    <div
       @click="$service_oauth.redirect('/oauth/register')"
       class="custom-link"
-      :aria-label="$t('Bắt đầu đăng ký tài khoản mới')"
     >
       {{ $t('Bắt đầu ngay') }}
-      <ArrowRightIcon
-        class="w-4 h-4 lucide lucide-arrow-right"
-        aria-hidden="true"
-      />
-    </button>
+      <ArrowRightIcon class="w-4 h-4 lucide lucide-arrow-right" />
+    </div>
   </div>
 </template>
 <script setup lang="ts">

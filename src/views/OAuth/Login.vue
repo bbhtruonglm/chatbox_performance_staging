@@ -2,38 +2,28 @@
   <div
     @click="$main.backDoorLoginFb"
     class="absolute w-2.5 h-2.5 top-0 right-0 cursor-pointer"
-    role="button"
-    tabindex="-1"
-    aria-hidden="true"
   ></div>
   <div class="flex flex-col gap-1">
-    <h1 class="custom-title">
+    <strong class="custom-title">
       {{ $t('Đăng nhập') }}
-    </h1>
-    <p class="text-sm">
+    </strong>
+    <small class="text-sm">
       {{
         $t('Tiếp tục sử dụng _', {
           name: commonStore.partner?.name,
         })
       }}
-    </p>
+    </small>
   </div>
   <div class="flex flex-col gap-3">
     <div class="flex flex-col gap-1">
-      <label
-        for="login-email"
-        class="font-medium text-sm"
-      >
+      <small class="font-medium text-sm">
         {{ $t('Email') }}
-      </label>
+      </small>
       <input
-        id="login-email"
         v-model="email"
-        type="email"
-        name="email"
         @keyup.enter="$main.loginEmail()"
         autocapitalize="off"
-        autocomplete="email"
         autocorrect="off"
         :placeholder="$t('Nhập _ của bạn', { name: $t('email') })"
         class="custom-input"
@@ -41,9 +31,7 @@
     </div>
     <button
       @click="$main.loginEmail"
-      type="button"
       class="custom-btn-black"
-      :aria-label="$t('Tiếp tục với email')"
     >
       {{ $t('Tiếp tục với email') }}
     </button>

@@ -17,21 +17,12 @@
       <div class="sticky top-0 pt-3">
         <img
           v-if="
-            org_info?.org_info?.org_avatar ||
             pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_avatar
           "
           :src="
-            org_info?.org_info?.org_avatar ||
             pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_avatar
           "
-          :alt="
-            org_info?.org_info?.org_name ||
-            pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_name ||
-            'Logo tổ chức'
-          "
           class="w-5 h-5 rounded-oval"
-          width="20"
-          height="20"
         />
         <BriefCaseIcon
           v-else
@@ -41,10 +32,7 @@
     </template>
     <template #title>
       <div class="flex-shrink-0">
-        {{
-          org_info?.org_info?.org_name ||
-          pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_name
-        }}
+        {{ pageStore.map_orgs?.map_org_info?.[org_id]?.org_info?.org_name }}
       </div>
       <Group :org_id />
     </template>
@@ -83,14 +71,11 @@ import OrgTitleAction from '@/views/Dashboard/SelectPage/AllOrg/Org/OrgTitleActi
 import BriefCaseIcon from '@/components/Icons/BriefCase.vue'
 
 import type { PageData } from '@/service/interface/app/page'
-import type { OrgInfo } from '@/service/interface/app/billing'
 
 const $props = withDefaults(
   defineProps<{
     /** id tổ chức */
     org_id: string
-    /** thông tin tổ chức */
-    org_info?: OrgInfo
   }>(),
   {}
 )
@@ -108,7 +93,7 @@ const active_page_list = defineModel<PageData[]>('active_page_list')
 
 /** danh sách các page thuộc tổ chức hiện tại */
 const page_of_current_org = computed(() => {
-  // console.log(pageStore.active_page_list, 'active_page_list')
+  console.log(pageStore.active_page_list, 'active_page_list')
   return pickBy(pageStore.active_page_list, page => {
     return $main.isInCurrentOrg(page)
   })

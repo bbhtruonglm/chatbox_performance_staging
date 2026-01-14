@@ -12,9 +12,7 @@
     <template #item>
       <div class="flex gap-3">
         <InboxStackIcon class="text-slate-700 size-4 flex-shrink-0" />
-        <div
-          class="flex flex-col md:flex-row w-full justify-between gap-3 min-w-0"
-        >
+        <div class="flex flex-col md:flex-row w-full justify-between gap-3 min-w-0">
           <div class="flex-shrink-0">
             <h4 class="text-sm font-medium">
               {{ $t('Chế độ hiển thị hội thoại') }}
@@ -25,7 +23,6 @@
           </div>
           <select
             v-model="org_sort_conversation"
-            :aria-label="$t('Chế độ hiển thị hội thoại')"
             class="w-full md:w-72 p-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm"
           >
             <option value="NEWEST">
@@ -40,9 +37,7 @@
       <div class="h-px w-full bg-slate-200" />
       <div class="flex gap-3">
         <SwatchIcon class="text-slate-700 size-4 flex-shrink-0" />
-        <div
-          class="flex flex-col md:flex-row w-full justify-between gap-3 min-w-0"
-        >
+        <div class="flex flex-col md:flex-row w-full justify-between gap-3 min-w-0">
           <div class="flex-shrink-0">
             <h4 class="text-sm font-medium">
               {{ $t('Chế độ hiển thị gắn nhãn') }}
@@ -53,7 +48,6 @@
           </div>
           <select
             v-model="org_display_label_type"
-            :aria-label="$t('Chế độ hiển thị gắn nhãn')"
             class="w-full md:w-72 p-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm"
           >
             <option value="ICON_TOOLTIP">
@@ -91,7 +85,6 @@
             <Toggle
               v-model="org_is_only_visible_client_of_staff"
               class_toggle="peer-checked:bg-black"
-              :aria-label="$t('Hiện hội thoại theo nhân viên chỉ định')"
             />
           </div>
         </div>
@@ -112,7 +105,6 @@
             <Toggle
               v-model="org_is_hide_page_avatar"
               class_toggle="peer-checked:bg-black"
-              :aria-label="$t('Ẩn ảnh đại diện của trang')"
             />
           </div>
         </div>

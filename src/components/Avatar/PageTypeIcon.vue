@@ -5,7 +5,6 @@
     loading="lazy"
     v-else-if="page_type === 'FB_INSTAGRAM'"
     src="@/assets/icons/instagram-color.svg"
-    alt="Instagram"
   />
 
   <WebIcon v-else-if="page_type === 'WEBSITE'" />
@@ -14,21 +13,11 @@
     loading="lazy"
     v-else-if="page_type === 'FB_WHATSAPP'"
     src="@/assets/icons/whatsapp.svg"
-    alt="Whatsapp"
   />
 
-  <ZaloIcon
-    v-else-if="page_type === 'ZALO_OA'"
-    alt="Zalo OA"
-  />
-  <ZaloIcon
-    v-else-if="page_type === 'ZALO_PERSONAL'"
-    alt="Zalo Personal"
-  />
-  <TiktokIcon
-    v-else-if="page_type === 'TIKTOK'"
-    alt="Tiktok"
-  />
+  <ZaloIcon v-else-if="page_type === 'ZALO_OA'" />
+  <ZaloIcon v-else-if="page_type === 'ZALO_PERSONAL'" />
+  <TiktokIcon v-else-if="page_type === 'TIKTOK'" />
 
   <div v-else />
 </template>

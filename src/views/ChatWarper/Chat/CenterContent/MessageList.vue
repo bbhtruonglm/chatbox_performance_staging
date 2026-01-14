@@ -161,8 +161,10 @@
         :key="message.temp_id"
         class="relative group flex flex-col gap-1 items-end py-2"
       >
-        <div class="message-size group relative flex gap-1 items-end">
+        <div class="w-fit group relative flex gap-1 items-end">
+          <!-- Hiển thị text message nếu có text -->
           <PageTempTextMessage
+            v-if="message.text"
             :text="message.text"
             :mentions="message.mentions"
             :snap_replay_message="message.snap_replay_message"
@@ -171,9 +173,19 @@
           <!-- :class="{
             'border border-red-500 rounded-lg': message.error,
           }" -->
+          <!-- Hiển thị attachment message nếu có attachments -->
+          <PageTempAttachmentMessage
+            v-else-if="message.message_attachments?.length"
+            :attachments="message.message_attachments"
+            :sizes="message.attachment_size"
+            :platform_type="select_conversation?.platform_type"
+            :class="{
+              'border border-red-500': message.error,
+            }"
+          />
           <StaffAvatar
             :id="chatbotUserStore.chatbot_user?.user_id"
-            class="w-6 h-6 rounded-oval flex-shrink-0"
+            class="w-8 h-8 rounded-oval flex-shrink-0"
           />
         </div>
         <SendStatus :is_error="message.error" />
@@ -201,6 +213,7 @@ import Loading from '@/components/Loading.vue'
 import TimeSplit from '@/views/ChatWarper/Chat/CenterContent/MessageList/TimeSplit.vue'
 import UnsupportMessage from '@/views/ChatWarper/Chat/CenterContent/MessageList/UnsupportMessage.vue'
 import PageTempTextMessage from '@/views/ChatWarper/Chat/CenterContent/MessageList/PageTempTextMessage.vue'
+import PageTempAttachmentMessage from '@/views/ChatWarper/Chat/CenterContent/MessageList/PageTempAttachmentMessage.vue'
 import SendStatus from '@/views/ChatWarper/Chat/CenterContent/MessageList/SendStatus.vue'
 import SystemMessage from '@/views/ChatWarper/Chat/CenterContent/MessageList/SystemMessage.vue'
 import ClientRead from '@/views/ChatWarper/Chat/CenterContent/MessageList/ClientRead.vue'
@@ -387,11 +400,13 @@ function isLastPageMessage(message: MessageInfo, index: number) {
 function socketNewMessage({ detail }: CustomEvent) {
   // nếu không có dữ liệu thì thôi
   if (!detail) return
+  console.log('socketNewMessage', detail)
 
   // nếu không phải của khách hàng đang chọn thì chặn
+  if (detail.fb_client_id !== select_conversation.value?.fb_client_id) return
   if (
-    detail.fb_page_id !== select_conversation.value?.fb_page_id ||
-    detail.fb_client_id !== select_conversation.value.fb_client_id
+    detail.fb_page_id !== select_conversation.value?.fb_page_id &&
+    select_conversation.value?.platform_type !== 'FB_INSTAGRAM'
   )
     return
 
@@ -435,18 +450,70 @@ function socketNewMessage({ detail }: CustomEvent) {
         (message.replay_mid && message.replay_mid === detail?.replay_mid)
     )
 
+  /**
+   * Xử lý clear temp message dựa trên URL attachment
+   * Áp dụng cho các platform không phải FB khi gửi nhiều ảnh
+   * Socket sẽ trả về từng tin riêng, mỗi tin có 1 attachment
+   */
+  if (detail?.message_attachments?.length) {
+    /** Lấy danh sách URL của attachment trong tin nhắn socket */
+    const SOCKET_URLS = detail.message_attachments
+      .map((att: any) => att?.payload?.url || att?.url)
+      .filter(Boolean)
+
+    /** Flag để check đã xóa temp message chưa */
+    let is_cleared = false
+
+    /** Xóa temp message có attachment URL trùng khớp */
+    if (SOCKET_URLS.length) {
+      /** Kiểm tra và xóa temp message có URL trùng */
+      const REMOVED = remove(messageStore.send_message_list, temp_msg => {
+        /** Kiểm tra temp message có attachment nào trùng URL không */
+        const HAS_MATCHING_URL = temp_msg.message_attachments?.some(temp_att =>
+          SOCKET_URLS.includes(temp_att.url)
+        )
+        return HAS_MATCHING_URL
+      })
+      /** Đánh dấu đã clear nếu có xóa được */
+      if (REMOVED.length) is_cleared = true
+    }
+
+    /**
+     * Fallback cho Zalo và các platform khác:
+     * URL từ server có thể khác với URL temp (re-upload, encode khác)
+     * Nếu tin nhắn socket là từ page và có attachment, xóa temp message attachment cũ nhất
+     */
+    if (!is_cleared && detail?.message_type === 'page') {
+      /** Tìm temp message có attachment */
+      const TEMP_INDEX = messageStore.send_message_list.findIndex(
+        temp_msg => temp_msg.message_attachments?.length
+      )
+      /** Nếu tìm thấy thì xóa */
+      if (TEMP_INDEX !== -1) {
+        messageStore.send_message_list.splice(TEMP_INDEX, 1)
+      }
+    }
+  }
+
   // nếu đang ở vị trí bottom thì dùng scrollToBottomMessage
   if (IS_BOTTOM) scrollToBottomMessage(messageStore.list_message_id)
+
+  // Update vị trí "người đã đọc" sau khi có tin nhắn mới
+  nextTick(() => {
+    visibleFirstClientReadAvatar()
+  })
 }
 /**xử lý socket cập nhật tin nhắn hiện tại */
 function socketUpdateMssage({ detail }: CustomEvent) {
   // nếu không có dữ liệu thì thôi
   if (!detail) return
+  console.log('socketUpdateMssage', detail)
 
   // nếu không phải của khách hàng đang chọn thì chặn
+  if (detail.fb_client_id !== select_conversation.value?.fb_client_id) return
   if (
-    detail.fb_page_id !== select_conversation.value?.fb_page_id ||
-    detail.fb_client_id !== select_conversation.value.fb_client_id
+    detail.fb_page_id !== select_conversation.value?.fb_page_id &&
+    select_conversation.value?.platform_type !== 'FB_INSTAGRAM'
   )
     return
 
@@ -503,18 +570,18 @@ function loadMoreMessage($event: UIEvent) {
   /**giá trị scroll top hiện tại */
   const SCROLL_TOP = LIST_MESSAGE?.scrollTop
 
-  // nếu đang chạy hoặc đã hết dữ liệu thì thôi
+  /** nếu đang chạy hoặc đã hết dữ liệu thì thôi */
   if (is_loading.value || is_done.value) return
 
-  // infinitve loading scroll
+  /** infinitve loading scroll */
   if (SCROLL_TOP < 500) getListMessage()
 }
 /**đọc danh sách tin nhắn */
 function getListMessage(is_scroll?: boolean) {
-  // nếu đang mất mạng thì không cho gọi api
+  /** nếu đang mất mạng thì không cho gọi api */
   if (!commonStore.is_connected_internet) return
 
-  // nếu chưa chọn khách hàng thì thôi
+  /** nếu chưa chọn khách hàng thì thôi */
   if (!select_conversation.value?.fb_page_id) return
   if (!select_conversation.value?.fb_client_id) return
 
@@ -523,7 +590,7 @@ function getListMessage(is_scroll?: boolean) {
 
   flow(
     [
-      // * bật loading
+      /** bật loading */
       (cb: CbError) => {
         is_loading.value = true
 
@@ -541,21 +608,21 @@ function getListMessage(is_scroll?: boolean) {
 
         cb()
       },
-      // * đọc dữ liệu từ api
+      /** đọc dữ liệu từ api */
       (cb: CbError) => tryLoadUntilScrollable(cb),
-      // * làm cho scroll to top mượt hơn
+      /** làm cho scroll to top mượt hơn */
       (cb: CbError) => {
-        // chạy infinitve loading scroll
+        /** chạy infinitve loading scroll */
         nextTick(() => {
-          // lấy div chưa danh sách tin nhắn
+          /** lấy div chưa danh sách tin nhắn */
           const LIST_MESSAGE = document.getElementById(
             messageStore.list_message_id
           )
 
           /** nếu không có thì thôi */
-          if (!LIST_MESSAGE) return cb()
+          if (!LIST_MESSAGE) return
 
-          // Scroll lại div cho về đúng giá trị trước -> gần như mượt
+          /** Scroll lại div cho về đúng giá trị trước -> gần như mượt */
           LIST_MESSAGE.scrollTop =
             LIST_MESSAGE.scrollHeight - old_position_to_bottom.value
         })
@@ -564,8 +631,21 @@ function getListMessage(is_scroll?: boolean) {
       },
     ],
     e => {
+      /** tắt loading */
+      is_loading.value = false
+
+      /** load lần đầu thì tự động cuộn xuống */
+      if (is_scroll) {
+        scrollToBottomMessage(messageStore.list_message_id)
+
+        setTimeout(
+          () => scrollToBottomMessage(messageStore.list_message_id),
+          500
+        )
+      }
+
       if (e) {
-        // gắn cờ đã load hết dữ liệu
+        /** gắn cờ đã load hết dữ liệu */
         is_done.value = true
 
         // tắt loading nếu lỗi
@@ -599,20 +679,21 @@ function getListMessage(is_scroll?: boolean) {
 const visibleFirstClientReadAvatar = debounce(() => {
   /** danh sách các phần tử avatar đánh dấu khách đọc */
   const ELEMENTS = document.querySelectorAll('.mesage-client-read')
-  // nếu không có thì thôi
+
+  /** nếu không có thì thôi */
   if (!ELEMENTS?.length) return
-  // nếu có thì ẩn tất cả chỉ hiện phần tử cuối cùng
+
+  /** nếu có thì ẩn tất cả chỉ hiện phần tử cuối cùng */
   ELEMENTS.forEach((el, index) => {
     /** phần tử avatar đánh dấu khách đọc */
     const ELEMENT = el as HTMLElement
-    // nếu không có thì thôi
+    /** nếu không có thì thôi */
     if (!ELEMENT) return
-    // nếu là phần tử cuối cùng thì hiện
+    /** nếu là phần tử cuối cùng thì hiện */
     if (index === ELEMENTS.length - 1) {
       ELEMENT.style.display = 'block'
-    }
-    // nếu khác phần tử cuối cùng thì ẩn
-    else {
+    } else {
+      /** nếu khác phần tử cuối cùng thì ẩn */
       ELEMENT.style.display = 'none'
     }
   })
@@ -623,11 +704,11 @@ const visibleFirstClientReadAvatar = debounce(() => {
  * nên sử dụng debounce để chỉ chạy event cuối cùng, tránh bị lặp code
  */
 function visibleLastStaffReadAvatar(staff_id: string) {
-  // init hàm debounce cho từng staff nếu không tồn tại
+  /** init hàm debounce cho từng staff nếu không tồn tại */
   if (!list_debounce_staff.value[staff_id])
     list_debounce_staff.value[staff_id] = debounce(doVisibleAvatar, 50)
 
-  // chạy hàm debounce
+  /** chạy hàm debounce */
   list_debounce_staff.value[staff_id](staff_id)
 
   /**hiển thị avatar staff cuối cùng */
@@ -637,12 +718,11 @@ function visibleLastStaffReadAvatar(staff_id: string) {
       document.querySelectorAll(`.message-staff-read-${staff_id}`)
     )
 
-    // lặp qua toàn bộ các div
+    /** lặp qua toàn bộ các div */
     LIST_AVATAR.forEach((element: any, i: number) => {
-      // reset ẩn toàn bộ các avatar hiện tại
+      /** reset ẩn toàn bộ các avatar hiện tại */
       if (i < LIST_AVATAR.length - 1) element.style.display = 'none'
-      // chỉ hiển thị avatar cuối cùng
-      else element.style.display = 'block'
+      /** chỉ hiển thị avatar cuối cùng */ else element.style.display = 'block'
     })
   }
 }
@@ -657,44 +737,44 @@ const tryLoadUntilScrollable = (cb: CbError) => {
       limit: LIMIT,
     },
     (e, r) => {
-      // nếu lỗi thì thôi
+      /** nếu lỗi thì thôi */
       if (e) return cb(e)
 
-      // không có kết quả thì thôi hoặc đã lấy hết dữ liệu thì thôi
+      /** không có kết quả thì thôi hoặc đã lấy hết dữ liệu thì thôi */
       if (!r || !r.length) {
         is_done.value = true
         return cb()
       }
 
-      // đảo ngược mảng
+      /** đảo ngược mảng */
       r.reverse()
 
-      // thêm vào danh sách lên đầu
+      /** thêm vào danh sách lên đầu */
       messageStore.list_message.unshift(...r)
 
-      // trang tiếp theo
+      /** trang tiếp theo */
       skip.value += LIMIT
 
-      // ⚠️ Gọi lại nếu chưa scroll được
-      // Dùng nextTick nếu Vue chưa render kịp
+      /** ⚠️ Gọi lại nếu chưa scroll được */
+      /** Dùng nextTick nếu Vue chưa render kịp */
       nextTick(() => {
-        // lấy div chưa danh sách tin nhắn
+        /** lấy div chưa danh sách tin nhắn */
         const LIST_MESSAGE = document.getElementById(
           messageStore.list_message_id
         )
 
-        // nếu không có thì thôi
+        /** nếu không có thì thôi */
         if (!LIST_MESSAGE) return cb()
 
-        // nếu chưa thể scroll thì load tiếp
+        /** nếu chưa thể scroll thì load tiếp */
         if (
           LIST_MESSAGE.scrollHeight <= LIST_MESSAGE.clientHeight &&
           !is_done.value
         ) {
-          // chưa scroll được, tiếp tục load thêm
+          /** chưa scroll được, tiếp tục load thêm */
           tryLoadUntilScrollable(cb)
         } else {
-          // đã scroll được, hoặc đã hết dữ liệu
+          /** đã scroll được, hoặc đã hết dữ liệu */
           cb()
         }
       })
@@ -702,9 +782,4 @@ const tryLoadUntilScrollable = (cb: CbError) => {
   )
 }
 </script>
-<style scoped lang="scss">
-.message-size {
-  @apply max-w-96;
-  width: fit-content;
-}
-</style>
+<style scoped lang="scss"></style>

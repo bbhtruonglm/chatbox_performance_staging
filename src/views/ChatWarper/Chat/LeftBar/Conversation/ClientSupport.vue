@@ -41,10 +41,7 @@
       </template>
       <!-- Nếu AI bật và thiết lập AI bật thì mới hiển thị icon -->
       <SparklesIcon
-        v-if="
-          calcStatus?.(source) &&
-          getPageInfo(source?.fb_page_id)?.is_active_ai_agent
-        "
+        v-if="shouldShowAiIcon(source)"
         class="size-3"
         v-tooltip.bottom="$t('AI đang bật')"
       />
@@ -102,5 +99,22 @@ function isFindUid() {
 /**lấy toàn bộ label */
 function getPreviewLabel() {
   return getLabelValid($props.source?.fb_page_id, $props.source?.label_id)
+}
+
+/**kiểm tra có hiển thị icon AI ko */
+function shouldShowAiIcon(source?: ConversationInfo) {
+  /** kiểm tra trạng thái AI cơ bản */
+  const IS_ACTIVE =
+    calcStatus?.(source) && getPageInfo(source?.fb_page_id)?.is_active_ai_agent
+  // nếu không có trạng thái ai thì dừng
+  if (!IS_ACTIVE) return false
+
+  // nếu là bài post
+  if (source?.conversation_type === 'POST') {
+    // phải có mô tả training thì mới hiện
+    return !!source.ai_description
+  }
+
+  return true
 }
 </script>

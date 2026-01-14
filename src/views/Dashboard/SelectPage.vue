@@ -16,20 +16,17 @@
       <div
         class="gap-2 flex flex-col md:flex-row md:justify-between flex-shrink-0"
       >
-        <h1
+        <div
           class="text-lg font-semibold flex items-center gap-2 flex-grow min-w-0"
         >
-          <FlagIcon
-            class="size-5 flex-shrink-0"
-            aria-hidden="true"
-          />
-          <span class="flex-shrink-0">
+          <FlagIcon class="size-5 flex-shrink-0" />
+          <div class="flex-shrink-0">
             {{ $t('Trình quản lý Trang') }}
-          </span>
+          </div>
           <AssignGroup
             v-if="!orgStore.isAdminOrg() && !orgStore.is_selected_all_org"
           />
-        </h1>
+        </div>
         <div
           class="grid grid-cols-2 gap-5 md:flex md:justify-between flex-shrink-0"
         >
@@ -50,6 +47,8 @@
       <!-- <template v-if="orgStore.is_selected_all_org"> -->
       <AllOrg />
       <GroupPageAction />
+      <VipExpireToast />
+
       <!-- </template> -->
       <!-- <template v-else>
         <EmptyPage
@@ -117,6 +116,7 @@
           <GroupPageAction />
         </div>
       </template> -->
+      <!-- <template> -->
     </template>
   </DashboardLayout>
 </template>
@@ -137,15 +137,13 @@ import { KEY_GET_CHATBOT_USER_FUNCT } from '@/views/Dashboard/symbol'
 import { size } from 'lodash'
 import { storeToRefs } from 'pinia'
 import { container } from 'tsyringe'
-import { computed, defineAsyncComponent, inject, onMounted, watch } from 'vue'
+import { computed, inject, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import VipExpireToast from './VipExpireToast.vue'
 
-/** Lazy load các component không critical để cải thiện initial load */
-const AlertAccountLimitReached = defineAsyncComponent(
-  () => import('@/components/AlertModal/AlertAccountLimitReached.vue')
-)
-const HotAlert = defineAsyncComponent(() => import('@/components/HotAlert.vue'))
+import AlertAccountLimitReached from '@/components/AlertModal/AlertAccountLimitReached.vue'
+import HotAlert from '@/components/HotAlert.vue'
 import DashboardLayout from '@/components/Main/Dashboard/DashboardLayout.vue'
 import Search from '@/components/Main/Dashboard/Search.vue'
 import SelectOrg from '@/components/Main/Dashboard/SelectOrg.vue'
@@ -163,6 +161,8 @@ import InstagramIcon from '@/components/Icons/Instagram.vue'
 import WebIcon from '@/components/Icons/Web.vue'
 import ZaloIcon from '@/components/Icons/Zalo.vue'
 import { FlagIcon } from '@heroicons/vue/24/solid'
+import dayjs from 'dayjs'
+import type { OrgInfo } from '@/service/interface/app/billing'
 
 const { t: $t } = useI18n()
 const pageStore = usePageStore()
@@ -181,51 +181,37 @@ const { toggleModalConnectPage, getALlOrgAndPage } = usePageManager()
 /**hàm load lại thông tin chatbot user từ component cha */
 const getMeChatbotUser = inject(KEY_GET_CHATBOT_USER_FUNCT)
 
-// cắm bong bóng chat vào trang
+/** cắm bong bóng chat vào trang */
 useEmbedChat()
-
+/** tính toán menu hiện tại */
 computed(() => selectPageStore.current_menu)
 
 onMounted(async () => {
   /**
    * load lại info của chatbot user
-   * ĐÃ ĐƯỢC GỌI TRONG initRequireData (composable.ts)
-   * Comment out để tránh gọi API 2 lần
+   * phòng trường hợp user mới được kích hoạt gói
+   * nhưng sẽ bị gọi api 2 lần lúc đầu
    */
-  // getMeChatbotUser?.()
+  getMeChatbotUser?.()
 
-  // kích hoạt tự động mở kết nối nền tảng nếu cần
+  /** kích hoạt tự động mở kết nối nền tảng nếu cần */
   triggerConnectPlatform()
 
-  // lấy toàn bộ dữ liệu tổ chức và trang khi component được mount
-  // ĐÃ GỌI Ở DASHBOARD.VUE -> KHÔNG GỌI LẠI TRÁNH DUPLICATE
-  // await getALlOrgAndPage()
+  /** lấy toàn bộ dữ liệu tổ chức và trang khi component được mount */
+  await getALlOrgAndPage()
 
-  // Chờ dữ liệu load xong mới check
-  if (selectPageStore.is_loading) {
-    const unwatch = watch(
-      () => selectPageStore.is_loading,
-      val => {
-        if (!val) {
-          handleLoginWithoutPage()
-          unwatch()
-        }
-      }
-    )
-  } else {
-    handleLoginWithoutPage()
-  }
+  handleLoginWithoutPage()
 })
 
 /**kích hoạt tự động mở kết nối nền tảng nếu cần */
 function triggerConnectPlatform() {
-  // nếu không có cờ thì thôi
+  /** nếu không có cờ thì thôi */
   if (!$route.query.connect_page) return
 
   /** cờ kiểm tra mở kết nối */
   const CONNECT_PAGE = $route.query.connect_page?.toString() || ''
 
-  // mở modal connect zalo
+  /** mở modal connect zalo */
   toggleModalConnectPage?.(CONNECT_PAGE)
 }
 
@@ -234,19 +220,19 @@ function handleLoginWithoutPage() {
   /** Cờ đăng nhập lưu trong session storage */
   const IS_LOGIN = $session_storage.getItem('is_login')
 
-  // nếu đã đăng nhập thì thôi
+  /** nếu đã đăng nhập thì thôi */
   if (IS_LOGIN) return
 
-  // nếu không có page nào thì gửi tin nhắn trigger
+  /** nếu không có page nào thì gửi tin nhắn trigger */
   if (size(pageStore.all_page_list)) return
 
-  // gửi tin nhắn trigger
+  /** gửi tin nhắn trigger */
   $trigger_event_ref.sendMessageLoginWithoutPage({
     id: chatbotUserStore.chatbot_user?._id,
     name: chatbotUserStore.chatbot_user?.full_name,
   })
 
-  // cờ đăng nhập lưu trong session storage
+  /** cờ đăng nhập lưu trong session storage */
   $session_storage.setItem('is_login', true)
 }
 </script>
